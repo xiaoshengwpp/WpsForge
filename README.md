@@ -67,8 +67,8 @@
 
 ```bash
 # 1. 克隆代码仓库
-git clone https://github.com/your-username/wps-forge.git
-cd wps-forge
+git clone https://github.com/xiaoshengwpp/WpsForge.git
+cd WpsForge
 
 # 2. 安装依赖（含 wps-jsapi 类型定义）
 npm install
