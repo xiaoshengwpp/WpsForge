@@ -24,8 +24,20 @@ export function handleForward(req, res) {
 	const chunks = [];
 	req.on("data", (c) => chunks.push(c));
 	req.on("end", () => {
-		const headers = { "content-type": req.headers["content-type"] || "application/json" };
-		if (req.headers["authorization"]) headers["authorization"] = req.headers["authorization"];
+		const payload = chunks.length ? Buffer.concat(chunks) : null;
+		const headers = {
+			"content-type": req.headers["content-type"] || "application/json",
+			"accept": req.headers["accept"] || "application/json, text/plain, */*",
+			"accept-encoding": "identity", // 避免上游压缩导致解压错位
+		};
+		// 透传常用认证头
+		for (const key of ["authorization", "api-key", "x-api-key", "anthropic-version"]) {
+			if (req.headers[key]) headers[key] = req.headers[key];
+		}
+		if (payload) {
+			headers["content-length"] = payload.length;
+		}
+
 		let u;
 		try { u = new URL(target); } catch (e) {
 			res.writeHead(400, { ...CORS, "content-type": "application/json" });
@@ -35,10 +47,14 @@ export function handleForward(req, res) {
 			const body = [];
 			resp.on("data", (c) => body.push(c));
 			resp.on("end", () => {
-				res.writeHead(resp.statusCode || 502, {
+				const resHeaders = {
 					...CORS,
 					"content-type": resp.headers["content-type"] || "application/json",
-				});
+				};
+				if (resp.headers["content-encoding"]) {
+					resHeaders["content-encoding"] = resp.headers["content-encoding"];
+				}
+				res.writeHead(resp.statusCode || 502, resHeaders);
 				res.end(Buffer.concat(body));
 			});
 		});
@@ -46,9 +62,12 @@ export function handleForward(req, res) {
 			res.writeHead(502, { ...CORS, "content-type": "application/json" });
 			res.end(JSON.stringify({ error: "upstream_failed: " + e.message }));
 		});
-		if (chunks.length) up.write(Buffer.concat(chunks));
+		if (payload) up.write(payload);
 		up.end();
 	});
+	if (req.isPaused && req.isPaused()) {
+		req.resume();
+	}
 }
 
 // vite 插件：把转发挂到 dev server 的 /llm-proxy（与加载项页面同源，webview 不会拦截）

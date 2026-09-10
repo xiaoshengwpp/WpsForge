@@ -39,15 +39,26 @@ function OnAction(control) {
 }
 
 function toggleTaskPane() {
-    let tsId = window.Application.PluginStorage.getItem("wf_taskpane_id")
-    if (!tsId) {
-        let tskpane = window.Application.CreateTaskPane(GetUrlPath() + "/ui/taskpane.html")
-        let id = tskpane.ID
-        window.Application.PluginStorage.setItem("wf_taskpane_id", id)
-        tskpane.Visible = true
-    } else {
-        let tskpane = window.Application.GetTaskPane(tsId)
-        tskpane.Visible = !tskpane.Visible
+    try {
+        let tsId = window.Application.PluginStorage.getItem("wf_taskpane_id");
+        let tskpane = null;
+        if (tsId) {
+            try {
+                tskpane = window.Application.GetTaskPane(tsId);
+            } catch (e) {
+                tskpane = null;
+            }
+        }
+        if (!tskpane) {
+            tskpane = window.Application.CreateTaskPane(GetUrlPath() + "/ui/taskpane.html");
+            let id = tskpane.ID;
+            window.Application.PluginStorage.setItem("wf_taskpane_id", id);
+            tskpane.Visible = true;
+        } else {
+            tskpane.Visible = !tskpane.Visible;
+        }
+    } catch (err) {
+        notify("打开 AI 侧边栏失败: " + (err && err.message ? err.message : err));
     }
 }
 

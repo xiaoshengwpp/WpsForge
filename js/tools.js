@@ -5,7 +5,11 @@
 (function () {
     "use strict";
 
-    const app = () => window.Application;
+    const app = () => {
+        const a = window.Application || (window.wps && (window.wps.EtApplication ? window.wps.EtApplication() : window.wps.Application));
+        if (!a) throw new Error("未检测到 WPS 运行环境（window.Application 为空）");
+        return a;
+    };
 
     // WPS/Excel 的 Color 是 BGR 序整数
     function rgb(r, g, b) { return r + g * 256 + b * 65536; }
@@ -83,8 +87,20 @@
         const rows = arr2d.length, cols = arr2d[0].length;
         const cell = ws.Cells.Item(r1, c1);
         const target = ws.Range(cell, ws.Cells.Item(r1 + rows - 1, c1 + cols - 1));
-        if (rows === 1 && cols === 1) target.Value = arr2d[0][0];
-        else target.Value = arr2d;
+        if (rows === 1 && cols === 1) {
+            target.Value = arr2d[0][0];
+        } else {
+            try {
+                target.Value = arr2d;
+            } catch (e) {
+                // 若批量赋值受限，安全降级为逐单元格写入
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        try { ws.Cells.Item(r1 + r, c1 + c).Value = arr2d[r][c]; } catch (err) { }
+                    }
+                }
+            }
+        }
         return target;
     }
 
@@ -185,14 +201,22 @@
     function setFormula(cell, formula, sheetName) {
         const ws = sheetByName(sheetName);
         if (!cell) throw new Error("cell 参数不能为空（如 A1 或 B2:B100）");
-        if (typeof formula !== "string" || formula[0] !== "=") throw new Error("公式必须以 = 开头");
+        if (typeof formula !== "string") formula = String(formula || "");
+        formula = formula.trim();
+        // 纠偏模型生成的常见全角标点
+        formula = formula.replace(/，/g, ",").replace(/（/g, "(").replace(/）/g, ")").replace(/：/g, ":");
+        if (!formula.startsWith("=")) formula = "=" + formula;
         ws.Range(cell).Formula = formula;
         return { msg: `已在 ${cell} 写入公式: ${formula}` };
     }
 
     function writeCells(start, values, sheetName) {
         const ws = sheetByName(sheetName);
-        if (!start || !Array.isArray(values) || !values.length) throw new Error("start 与 values 不能为空");
+        if (!start) throw new Error("start 不能为空");
+        if (typeof values === "string") {
+            try { values = JSON.parse(values); } catch (e) { }
+        }
+        if (!Array.isArray(values) || !values.length) throw new Error("values 必须为有效数组");
         const width = Math.max(...values.map(r => Array.isArray(r) ? r.length : 1));
         const norm = values.map(r => {
             if (!Array.isArray(r)) { const a = new Array(width).fill(null); a[0] = r; return a; }
@@ -226,14 +250,21 @@
         if (!wb) throw new Error("请先打开一个表格文件");
         const ws = a.ActiveSheet;
         const sheets = [];
-        for (let i = 1; i <= a.Sheets.Count; i++) sheets.push(a.Sheets.Item(i).Name);
-        const info = { workbook: wb.Name, sheets, active: ws ? ws.Name : null };
-        if (ws && ws.UsedRange) {
-            const ur = ws.UsedRange;
-            info.used_range = ur.Address(false, false);
-            info.rows = ur.Rows.Count;
-            info.columns = ur.Columns.Count;
+        const sheetsObj = wb.Sheets || wb.Worksheets || a.Sheets;
+        if (sheetsObj && sheetsObj.Count) {
+            for (let i = 1; i <= sheetsObj.Count; i++) {
+                try { sheets.push(sheetsObj.Item(i).Name); } catch (e) { }
+            }
         }
+        const info = { workbook: wb.Name, sheets, active: ws ? ws.Name : null };
+        try {
+            if (ws && ws.UsedRange) {
+                const ur = ws.UsedRange;
+                info.used_range = ur.Address ? ur.Address(false, false) : "A1";
+                info.rows = ur.Rows ? ur.Rows.Count : 0;
+                info.columns = ur.Columns ? ur.Columns.Count : 0;
+            }
+        } catch (e) { }
         return { msg: `${wb.Name} · ${sheets.length} 个工作表`, data: info };
     }
 
@@ -293,6 +324,8 @@
     }
 
     function cleanData(ops, ref, sheetName) {
+        if (typeof ops === "string") ops = [ops];
+        if (!Array.isArray(ops) || !ops.length) throw new Error("ops 必须包含至少一个清洗操作");
         const results = [];
         for (const op of ops) {
             switch (op) {
@@ -414,7 +447,7 @@
                 type: "object", required: ["format"],
                 properties: { format: { type: "string" }, range: RANGE_PARAM, sheet: SHEET_PARAM },
             },
-            run: (a) => setNumberFormat(a.range, a.format, a.sheet),
+            run: (a) => setNumberFormat(a.range, a.format || a.code, a.sheet),
         },
     ];
 
