@@ -1,0 +1,23 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" onLoad="OnAddinLoad">
+    <ribbon startFromScratch="false">
+        <tabs>
+            <tab id="wfTab" label="WpsForge">
+                <group id="wfGroupClean" label="数据清洗">
+                    <button id="btnDelEmptyRows" label="删除空行" onAction="OnAction" getImage="GetImage" size="large"/>
+                    <button id="btnDelEmptyCols" label="删除空列" onAction="OnAction" getImage="GetImage" size="large"/>
+                    <button id="btnDelDup" label="整行去重" onAction="OnAction" getImage="GetImage" size="large"/>
+                    <button id="btnTrim" label="清除空格" onAction="OnAction" getImage="GetImage" size="large"/>
+                </group>
+                <group id="wfGroupFormat" label="格式美化">
+                    <button id="btnBeautify" label="一键美化" onAction="OnAction" getImage="GetImage" size="large"/>
+                    <button id="btnZebra" label="斑马纹" onAction="OnAction" getImage="GetImage" size="large"/>
+                    <button id="btnFreeze" label="冻结首行" onAction="OnAction" getImage="GetImage" size="large"/>
+                    <button id="btnSerial" label="批量序号" onAction="OnAction" getImage="GetImage" size="large"/>
+                </group>
+                <group id="wfGroupAI" label="AI 助手">
+                    <button id="btnAI" label="AI 侧边栏" onAction="OnAction" getImage="GetImage" size="large"/>
+                </group>
+            </tab>
+        </tabs>
+    </ribbon>
+</customUI>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WpsForge AI</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 13px; color: #2b2b33; background: #f7f8fa; }
+    #app { display: flex; flex-direction: column; height: 100%; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: #fff; border-bottom: 1px solid #e6e8ee; flex: none; }
+    header .title { font-weight: 600; color: #6C5CE7; }
+    header .title small { color: #999; font-weight: 400; margin-left: 6px; }
+    header .btns button { border: none; background: none; cursor: pointer; font-size: 15px; padding: 2px 5px; color: #666; }
+    header .btns button:hover { color: #6C5CE7; }
+    #settings { display: none; background: #fff; border-bottom: 1px solid #e6e8ee; padding: 10px; flex: none; }
+    #settings.open { display: block; }
+    #settings label { display: block; margin-bottom: 8px; color: #555; }
+    #settings input, #settings select { width: 100%; margin-top: 3px; padding: 5px 7px; border: 1px solid #d6d9e0; border-radius: 5px; font-size: 12px; }
+    #settings .hint { color: #999; font-size: 11px; line-height: 1.5; }
+    #chat { flex: 1; overflow-y: auto; padding: 10px; }
+    .msg { margin-bottom: 10px; max-width: 94%; padding: 8px 10px; border-radius: 8px; line-height: 1.6; word-break: break-word; white-space: pre-wrap; }
+    .msg.user { background: #6C5CE7; color: #fff; margin-left: auto; border-bottom-right-radius: 2px; }
+    .msg.ai { background: #fff; border: 1px solid #e6e8ee; border-bottom-left-radius: 2px; }
+    .msg .tool { display: block; background: #f0f1f5; border-radius: 5px; padding: 4px 7px; margin: 4px 0; font-size: 12px; color: #444; }
+    .msg .tool b { color: #6C5CE7; }
+    .msg code { background: #eef0f4; padding: 1px 4px; border-radius: 3px; font-family: Menlo, Consolas, monospace; }
+    #quick { flex: none; padding: 6px 10px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+    #quick span { background: #fff; border: 1px solid #dcdfe6; border-radius: 12px; padding: 3px 9px; font-size: 12px; color: #555; cursor: pointer; }
+    #quick span:hover { border-color: #6C5CE7; color: #6C5CE7; }
+    footer { flex: none; display: flex; gap: 6px; padding: 8px 10px; }
+    footer textarea { flex: 1; resize: none; height: 56px; padding: 7px 9px; border: 1px solid #d6d9e0; border-radius: 7px; font-size: 13px; font-family: inherit; }
+    footer textarea:focus { outline: none; border-color: #6C5CE7; }
+    footer button { flex: none; width: 56px; border: none; border-radius: 7px; background: #6C5CE7; color: #fff; cursor: pointer; font-size: 13px; }
+    footer button:disabled { background: #b9b3ec; cursor: default; }
+    #status { flex: none; padding: 0 10px 6px; color: #999; font-size: 12px; min-height: 18px; }
+</style>
+</head>
+<body>
+<div id="app">
+    <header>
+        <div class="title">WpsForge AI<small>对话即操作</small></div>
+        <div class="btns">
+            <button id="btnClear" title="清空对话">🗑</button>
+            <button id="btnConfig" title="模型设置">⚙</button>
+            <button id="btnHide" title="收起侧边栏">✕</button>
+        </div>
+    </header>
+    <div id="settings">
+        <label>模型服务
+            <select id="s-provider">
+                <option value="deepseek">DeepSeek</option>
+                <option value="kimi">Kimi (月之暗面)</option>
+                <option value="glm">智谱 GLM</option>
+                <option value="openai">OpenAI</option>
+                <option value="custom">自定义 (OpenAI 兼容)</option>
+            </select>
+        </label>
+        <label id="wrap-base" style="display:none">接口地址 Base URL
+            <input id="s-base" placeholder="https://xxx/v1">
+        </label>
+        <label>API Key
+            <input id="s-key" type="password" placeholder="sk-...">
+        </label>
+        <label>模型名
+            <input id="s-model" placeholder="deepseek-chat">
+        </label>
+        <div class="hint">Key 仅保存在本机 WPS 网页缓存中，直接发给所选模型服务商。推荐使用支持 function-calling 的模型。</div>
+        <div style="margin-top:8px"><button id="btnSave" style="width:100%;padding:6px;border:none;border-radius:6px;background:#6C5CE7;color:#fff;cursor:pointer">保存设置</button></div>
+    </div>
+    <div id="chat"></div>
+    <div id="quick">
+        <span>帮我给这个表做一键美化</span>
+        <span>删除所有空行（先告诉我有多少行）</span>
+        <span>读数据后，写一个求和公式</span>
+        <span>按金额列降序排序</span>
+    </div>
+    <footer>
+        <textarea id="input" placeholder="描述你想对表格做的事，Enter 发送"></textarea>
+        <button id="btnSend">发送</button>
+    </footer>
+    <div id="status"></div>
+</div>
+<script type="text/javascript" src="../js/util.js"></script>
+<script type="text/javascript" src="../js/tools.js"></script>
+<script type="text/javascript" src="../js/taskpane.js"></script>
+</body>
+</html>

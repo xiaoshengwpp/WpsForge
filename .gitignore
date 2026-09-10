@@ -1,0 +1,7 @@
+node_modules/
+dist/
+wps-addon-build/
+wps-addon-publish/
+.debugTemp/
+.DS_Store
+*.local

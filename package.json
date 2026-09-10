@@ -1,0 +1,17 @@
+{
+	"name": "wps-forge",
+	"addonType": "et",
+	"version": "0.1.0",
+	"scripts": {
+		"dev": "vite --port 3889",
+		"build": "vite build",
+		"preview": "vite preview"
+	},
+	"description": "WpsForge - WPS表格「工具箱 + AI」混合效率加载项",
+	"license": "MIT",
+	"devDependencies": {
+		"et-jsapi-declare": "latest",
+		"vite": "^5.3.1",
+		"wpsjs": "latest"
+	}
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<JsPlugin>
+  <ApiVersion>1.0.0</ApiVersion>
+  <Name>WpsForge</Name>
+  <Description>WpsForge - WPS表格 工具箱 + AI 混合效率加载项</Description>
+  <Functions>
+    <Uri>/functions.json</Uri>
+    <Namespace>WpsForge</Namespace>
+  </Functions>
+</JsPlugin>
