@@ -49,25 +49,34 @@
     }
 
     // ---------- LLM 调用 ----------
-    // 先直连；直连被 CORS/网络策略拦截(TypeError)时自动改走本地代理(npm run proxy)
+    // 连接链：直连 → 同源内嵌代理 /llm-proxy(随 wpsjs debug 自动存在) → 独立代理 :3890(生产用)
     async function apiRequest(path, init) {
         const base = (settings.base || "").replace(/\/+$/, "");
         if (!base) throw new Error("接口地址未设置，请先点 ⚙ 配置");
         const target = base + path;
-        let directErr = null;
-        try {
-            return await fetch(target, init);
-        } catch (e) { directErr = e; }
-        try {
-            const pInit = Object.assign({}, init, {
-                headers: Object.assign({}, init.headers, { "X-WF-Target": target }),
-            });
-            return await fetch("http://127.0.0.1:3890/proxy", pInit);
-        } catch (e2) {
-            throw new Error(
-                "直连模型服务失败（" + (directErr && directErr.message || directErr) + "），本地代理也不可用（" +
-                (e2 && e2.message || e2) + "）。\n修复：在项目目录执行 npm run proxy 启动代理（窗口保持开着），再重试。");
+        const via = (url) => Object.assign({}, init, {
+            headers: Object.assign({}, init.headers, { "X-WF-Target": target }),
+        });
+        const attempts = [
+            ["直连", () => fetch(target, init)],
+            ["内嵌代理", () => fetch("/llm-proxy", via())],
+            ["独立代理", () => fetch("http://127.0.0.1:3890/proxy", via())],
+        ];
+        const errors = [];
+        for (const [label, fn] of attempts) {
+            try {
+                const r = await fn();
+                if (r.status === 404) {
+                    const t = await r.clone().text().catch(() => "");
+                    if (!/^\s*[{[]/.test(t)) { errors.push(label + "不可用(404)"); continue; } // 代理端点不存在，换下一个
+                }
+                return r; // 有真实响应(含业务错误)交给调用方处理
+            } catch (e) {
+                errors.push(label + "失败(" + (e && e.message || e) + ")");
+            }
         }
+        throw new Error("三种连接方式都不通：" + errors.join("；") +
+            "\n若内嵌代理 404，说明开发服务还是旧配置——请在终端重启 wpsjs debug；生产环境请运行 npm run proxy。");
     }
 
     async function callLLM() {

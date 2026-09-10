@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import { functionsScanner, copyFile } from "wpsjs/vite_plugins"
+import { wfLlmProxyPlugin } from "./scripts/llm-forward.mjs"
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -18,6 +19,7 @@ export default defineConfig({
             outputJsonPath: 'functions.json',
             namespace: 'WpsForge',
         }),
+        wfLlmProxyPlugin(),
     ],
     resolve: {
         alias: {
@@ -25,6 +27,8 @@ export default defineConfig({
         }
     },
     server: {
-        host: '0.0.0.0'
+        host: '0.0.0.0',
+        port: 3889,
+        strictPort: true,
     }
 })
