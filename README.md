@@ -6,20 +6,178 @@
 
 <p align="center">
   <strong>WPS 表格「工具箱 + AI」混合效率加载项</strong><br>
-  常用高阶操作一键化，长尾复杂需求对话化 · 纯原生矢量 SVG 驱动 · 100% 开源
+  Hybrid "Toolbox + AI Copilot" Add-in for WPS Spreadsheets<br>
+  常用高阶操作一键化，长尾复杂需求对话化 · 纯原生矢量 SVG 驱动 · 100% 开源<br>
+  One-click Operations & Conversational AI Workflows · Pure Vector SVG · 100% Open Source
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/Platform-WPS%20Office%20(Windows%20%7C%20macOS)-0052cc.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A518.0.0-green.svg" alt="Node.js">
-  <img src="https://img.shields.io/badge/Icon-Pure%20Vector%20SVG-orange.svg" alt="Vector SVG">
+  <img src="https://img.shields.io/badge/Icons-Pure%20Vector%20SVG-orange.svg" alt="Vector SVG">
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
+</p>
+
+<p align="center">
+  <a href="#english"><strong>English</strong></a> • <a href="#简体中文"><strong>简体中文</strong></a>
 </p>
 
 ---
 
-## 项目定位与解决的问题
+<a name="english"></a>
+## English
+
+### Overview & The Problem We Solve
+
+Traditional spreadsheet productivity toolboxes often clutter the interface with dozens of nested menus that are difficult for beginners to navigate. Meanwhile, standard AI chat bots cannot directly access or manipulate the active spreadsheet's Document Object Model (DOM), leaving users with half-baked solutions like "copy-paste this formula".
+
+**WpsForge** seamlessly fuses both paradigms:
+1. **Deterministic High-frequency Tasks → One-click Ribbon Actions**: Instant execution for data cleaning, styling, zebra striping, and auto-numbering.
+2. **Complex Long-tail Workflows → Conversational AI Taskpane**: Describe your intent in natural language (e.g., *"Calculate 3% commission for rows where sales exceed 10k, write to column G, sort descending, and apply zebra striping"*). The AI reads actual cell values, creates a plan, and executes built-in spreadsheet tools sequentially.
+3. **Shared Tool Engine**: Both the ribbon buttons and the AI assistant share the exact same underlying spreadsheet engine (`js/tools.js`), ensuring transparency and reliability.
+
+---
+
+### Key Features
+
+#### 1. WpsForge Ribbon Tab
+Every action is accompanied by a dedicated, crisp 32x32 vector SVG icon tailored for WPS Office:
+
+- **Data Cleaning**
+  - **Delete Empty Rows**: Accurately scans selection or full sheet to remove all blank rows.
+  - **Delete Empty Columns**: Detects unused column ranges and cleans them in batch.
+  - **Remove Duplicates**: Compares row contents, keeps initial entries, and purges duplicate rows.
+  - **Trim Spaces**: Cleans leading and trailing half-width/full-width spaces and invisible control characters.
+- **Formatting & Beautification**
+  - **Auto Beautify**: Applies professional dark blue headers, elegant borders, and optimal row/column sizing.
+  - **Zebra Stripes**: Alternating subtle row colors for enhanced data readability.
+  - **Freeze Header**: Locks the top header row so it stays pinned during scrolling.
+  - **Batch Serial Numbers**: Generates auto-incrementing vertical serial numbers.
+- **AI Assistant**
+  - **AI Taskpane**: Opens the modern AI sidebar.
+
+#### 2. AI Autonomous Taskpane
+- **Transparent Tool Execution Cards**: Displays function call names, arguments, real-time spinner animations, status badges, and collapsible JSON payloads.
+- **Broad Model Support**: Built-in presets for DeepSeek, SiliconFlow, Moonshot Kimi, Zhipu GLM, OpenAI, and any custom OpenAI-compatible endpoint.
+- **Pure Vector SVG Interface**: Completely free of character or emoji icons; every UI element is rendered via vector SVGs.
+- **Clipboard Shield**: Custom context menu (Cut/Copy/Paste/Select All) to bypass WPS host webview keyboard shortcut hijacking.
+- **Multi-tiered Proxy Fallback**: Integrated same-origin reverse proxy to circumvent webview CORS restrictions.
+
+---
+
+### Quick Start (Development & Debugging)
+
+#### Prerequisites
+- **Node.js** ≥ 18.0.0
+- **WPS Office** (Personal or 365, on Windows or macOS)
+
+#### Setup & Launch
+
+```bash
+# 1. Clone repository
+git clone https://github.com/xiaoshengwpp/WpsForge.git
+cd WpsForge
+
+# 2. Install dependencies (includes wps-jsapi type definitions)
+npm install
+
+# 3. Start local development server (port 3889)
+npm run dev
+
+# 4. Register add-in and launch WPS for live debugging (Recommended)
+wpsjs debug
+```
+
+> **Note**: After your first `wpsjs debug` run, restart WPS Office (the `ribbon.xml` specification is loaded during WPS startup). The **WpsForge** tab will appear in the top ribbon.
+
+#### Configuring the AI Taskpane
+
+1. Click **AI Assistant** → **AI Taskpane** on the ribbon.
+2. Click the **Settings** icon on the top-right of the taskpane.
+3. Enter your provider API Key (e.g., DeepSeek).
+4. Click **Test Connection** to verify connectivity and Function Calling capabilities.
+5. Click **Save Settings** to begin interacting.
+
+---
+
+### Distribution & Team Deployment
+
+```bash
+# Build production bundle
+wpsjs publish
+```
+
+This generates `wps-addon-build/` and `wps-addon-publish/`:
+1. **Online Installation (Recommended for teams)**: Upload the build assets to any HTTPS server or object storage. Users open `publish.html` and click "Install". WPS automatically updates on launch.
+2. **Offline Portable Installation**: Copy the build directory directly to the local WPS add-in folder:
+   - **Windows**: `%APPDATA%\kingsoft\wps\jsaddons\`
+   - **macOS**: `~/Library/Containers/com.kingsoft.wpsoffice.mac/Data/.kingsoft/wps/jsaddons/`
+
+---
+
+### Architecture
+
+```
+ribbon.xml (Ribbon XML Layout)
+    │ OnAction
+    ▼
+js/ribbon.js ──► window.ForgeActions ─┐
+                                      ├── js/tools.js  ← WPS JSAPI (window.Application)
+ui/taskpane.html (Sidebar UI)          │      Identical underlying spreadsheet API
+    │ Tool-use loop ──────────────────►┘
+js/taskpane.js
+```
+
+- **Official Standards**: Built strictly on the official Kingsoft WPS JS Add-in framework (`wpsjs`), cross-platform without legacy VBA dependencies.
+- **Client-Side Autonomous Execution**: The tool-use engine runs locally in the sidebar. The LLM emits `tool_calls` → executed via WPS JSAPI → output fed back to LLM until final response.
+- **Native DOM Access**: Directly reads and writes through WPS native objects (`Range`, `Worksheet`), supporting `Ctrl+Z` undo.
+
+---
+
+### Data Privacy & Security
+
+- **Zero Cloud Storage**: WpsForge is a **100% serverless, client-only add-in**. Apart from encrypted HTTPS calls to your configured model provider, no telemetry, user data, or API Keys are stored or forwarded to third-party servers.
+- **Local Storage Isolation**: Your API Key is stored solely in the local browser cache (`localStorage`).
+- **On-Demand Access**: The AI only reads cell data when necessary for the user query (limited to 200 rows × 30 columns per read by default).
+- **Offline Reliability**: If you choose not to use AI, simply leave the API Key unconfigured. All ribbon toolbox features remain **100% functional offline**.
+
+---
+
+### Contributing
+
+Contributions, bug reports, and suggestions are warmly welcome!
+1. Fork the repository and create a branch (`git checkout -b feature/amazing-feature`).
+2. Follow project conventions:
+   - Use pure vector SVG icons only (no character/emoji icons).
+   - Any spreadsheet action must be encapsulated in `js/tools.js` and registered in `toolsSchema` for AI use.
+   - Maintain cross-platform (Windows & macOS) compatibility.
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`).
+4. Push to your branch and submit a Pull Request.
+
+---
+
+### License & Legal Disclaimers
+
+#### 1. Open Source License
+Distributed under the [MIT License](LICENSE). You are free to use, modify, and distribute this software, provided original copyright notices are retained.
+
+#### 2. Non-Affiliation & Trademark Disclaimer
+- **WPS** and **WPS Office** are registered trademarks of **Kingsoft Office Software Co., Ltd.**
+- **WpsForge** is an independent community project developed by individual open-source contributors and is **not affiliated with, sponsored by, authorized by, or associated with Kingsoft Office**.
+- This project utilizes Kingsoft's publicly available WPS JS Add-in Developer API strictly for technical extension and interoperability.
+
+#### 3. As-Is Warranty & Data Disclaimer
+- This software is provided "AS IS", without warranty of any kind, express or implied.
+- While operations support `Ctrl+Z` undo, generative AI outputs carry non-deterministic behavior. **Users must back up critical spreadsheets before performing automated modifications or batch cleaning**.
+- In no event shall the authors or contributors be liable for any data loss, business disruption, or damages arising from the use of this software.
+
+---
+
+<a name="简体中文"></a>
+## 简体中文
+
+### 项目定位与解决的问题
 
 传统的 Excel / WPS 高阶插件（如方方格子等）往往把各种功能做成密密麻麻的菜单，初学者找功能困难；而单纯的通用 AI 聊天机器人又无法直接触达当前打开的工作簿底层对象，只能提供“复制公式”这种半成品方案。
 
@@ -30,9 +188,9 @@
 
 ---
 
-## 核心功能特性
+### 核心功能特性
 
-### 1. 顶部功能区选项卡（WpsForge Ribbon）
+#### 1. 顶部功能区选项卡（WpsForge Ribbon）
 所有按钮均配备独立的 32×32 纯矢量 SVG 高清图标，与 WPS 原生设计语言无缝融合：
 
 - **数据清洗**
@@ -48,7 +206,7 @@
 - **AI 助手**
   - **AI 侧边栏**：点击拉起现代化智能对话侧边栏。
 
-### 2. AI 侧边栏对话引擎（Taskpane）
+#### 2. AI 侧边栏对话引擎（Taskpane）
 - **工具调用可视化（Tool Cards）**：每次 Function Calling 均展示调用名称、入参、执行动画、结果摘要与折叠详情，过程全透明。
 - **多模型支持**：内置 DeepSeek（推荐 · 极高性价比）、硅基流动 SiliconFlow、月之暗面 Kimi、智谱 GLM、OpenAI 及自定义 OpenAI 兼容接口。
 - **全矢量图形设计**：界面杜绝使用字符表情，交互按钮、状态徽章、快捷胶囊均由轻量级矢量 SVG 渲染。
@@ -57,13 +215,13 @@
 
 ---
 
-## 快速开始（开发调试）
+### 快速开始（开发调试）
 
-### 环境要求
+#### 环境要求
 - **Node.js** ≥ 18.0.0
 - **WPS Office** 个人版 / 365（Windows 或 macOS 均可正常运行）
 
-### 安装与运行
+#### 安装与运行
 
 ```bash
 # 1. 克隆代码仓库
@@ -82,7 +240,7 @@ wpsjs debug
 
 > **提示**：首次运行 `wpsjs debug` 后请重启一次 WPS（功能区 `ribbon.xml` 仅在 WPS 启动初始化时加载）。在顶部菜单看到 **WpsForge** 选项卡即表示安装成功。
 
-### 配置与使用 AI 侧边栏
+#### 配置与使用 AI 侧边栏
 
 1. 点击顶部功能区「**AI 助手**」→「**AI 侧边栏**」。
 2. 点击侧边栏右上角「**设置**」图标，填入您自有服务商的 API Key（如 DeepSeek）。
@@ -91,7 +249,7 @@ wpsjs debug
 
 ---
 
-## 分发与安装（团队部署）
+### 分发与安装（团队部署）
 
 ```bash
 # 构建正式发布包
@@ -106,7 +264,7 @@ wpsjs publish
 
 ---
 
-## 系统架构与工作原理
+### 系统架构与工作原理
 
 ```
 ribbon.xml (功能区 XML 布局)
@@ -125,7 +283,7 @@ js/taskpane.js
 
 ---
 
-## 数据安全与隐私声明
+### 数据安全与隐私声明
 
 - **零云端存储**：本项目为**无服务器（Serverless）纯客户端插件**。除与您自行配置的模型服务商进行加密 API 通信外，本项目没有任何中间收集服务器，**绝不存储、中转或上传任何个人数据或 API Key**。
 - **密钥本地加密留存**：API Key 仅留存在您本机的浏览器本地缓存（`localStorage`）中，不落盘至远程文件。
@@ -134,7 +292,7 @@ js/taskpane.js
 
 ---
 
-## 参与贡献
+### 参与贡献
 
 欢迎对 WpsForge 进行功能扩充、问题修复或提交设计改进！
 1. Fork 本仓库并新建特性分支（`git checkout -b feature/amazing-feature`）。
@@ -147,17 +305,17 @@ js/taskpane.js
 
 ---
 
-## 开源许可证与法律免责声明
+### 开源许可证与法律免责声明
 
-### 1. 开源许可证
+#### 1. 开源许可证
 本项目基于 [MIT License](LICENSE) 协议完全开源。您可以自由使用、修改、分发甚至用于商业学习，但需在衍生版本中保留原作者的版权声明与许可条款。
 
-### 2. 非官方商标免责声明 (Trademark Disclaimer)
+#### 2. 非官方商标免责声明 (Trademark Disclaimer)
 - **WPS**、**WPS Office** 及相关徽标为**北京金山办公软件股份有限公司（Kingsoft Office）**的注册商标。
 - **WpsForge** 是由独立开源社区开发者发起的第三方效率扩展项目，**与金山办公软件（Kingsoft）无任何官方隶属、赞助、授权、合资或直接商业关联**。
 - 本项目仅遵循金山办公官方开放的“WPS 加载项技术规范”进行合规的功能拓展与技术探索。
 
-### 3. 数据与使用免责条款 (As-Is Disclaimer)
+#### 3. 数据与使用免责条款 (As-Is Disclaimer)
 - 本软件按“现状 (AS IS)”提供，作者不对软件的适用性、稳定性或大模型生成内容的绝对准确性做任何明示或暗示的保证。
 - 尽管本插件对表格操作提供了 `Ctrl+Z` 撤销支持，但大模型针对复杂数据清洗和单元格改写存在一定随机性。**用户在对重要生产表格执行任何批量清洗、删除或覆写操作前，请务必自行做好原文件备份**。
 - 在任何情况下，开发者均不对因使用本软件或模型工具执行所引起的任何直接、间接、偶然或连带的数据损失或业务偏差承担法律责任。
