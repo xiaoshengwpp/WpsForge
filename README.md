@@ -1,112 +1,163 @@
 # WpsForge
 
-**WPS 表格「工具箱 + AI」混合效率加载项** —— 常用高阶操作一键化，长尾需求对话化。
+<p align="center">
+  <img src="images/ai.svg" width="68" height="68" alt="WpsForge Logo" />
+</p>
 
-装进 WPS 表格后顶部多出一个 `WpsForge` 选项卡：
+<p align="center">
+  <strong>WPS 表格「工具箱 + AI」混合效率加载项</strong><br>
+  常用高阶操作一键化，长尾复杂需求对话化 · 纯原生矢量 SVG 驱动 · 100% 开源
+</p>
 
-- **数据清洗**：删除空行 / 删除空列 / 整行去重 / 清除首尾空格（含全角空格）
-- **格式美化**：一键美化（边框+表头+行列宽）/ 斑马纹 / 冻结首行 / 批量序号
-- **AI 侧边栏**：说人话直接操作表格 —— "把销售额大于1万的行算 3% 提成写到 G 列"，
-  AI 会先读取数据核实，再调用与按钮完全同源的工具函数完成操作
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/Platform-WPS%20Office%20(Windows%20%7C%20macOS)-0052cc.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/Node.js-%E2%89%A518.0.0-green.svg" alt="Node.js">
+  <img src="https://img.shields.io/badge/Icon-Pure%20Vector%20SVG-orange.svg" alt="Vector SVG">
+  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
+</p>
 
-工具箱是确定性的一键按钮，AI 负责理解模糊需求；两者共享同一套实现（`js/tools.js`），
-按钮能做的 AI 都能做，且可组合成多步任务。
+---
 
-## 它解决什么问题
+## 项目定位与解决的问题
 
-以前玩 Excel 的高阶技巧（批量清洗、区域操作、宏）门槛高、分布零散。
-WpsForge 把高频操作做成按钮，把低频复杂需求交给 AI —— 相当于
-"方方格子式工具箱" 与 "Copilot 式对话操作" 的结合体，并且**完全开源**。
+传统的 Excel / WPS 高阶插件（如方方格子等）往往把各种功能做成密密麻麻的菜单，初学者找功能困难；而单纯的通用 AI 聊天机器人又无法直接触达当前打开的工作簿底层对象，只能提供“复制公式”这种半成品方案。
+
+**WpsForge** 将这两者深度融合：
+1. **确定性高频需求 → 工具箱一键操作**：数据清洗、格式美化、智能序号，一键秒级执行。
+2. **模糊长尾复合需求 → AI 侧边栏对话化**：“把销售额大于 1 万的行算 3% 提成写到 G 列，并按降序排好添加斑马纹”。AI 先真实读取单元格数据，再自主规划、连续调用内置工具直接改写工作表。
+3. **同源架构**：按钮与 AI 共享同一套底层表格操作引擎（`js/tools.js`），工具箱能做的 AI 都能做，透明可靠。
+
+---
+
+## 核心功能特性
+
+### 1. 顶部功能区选项卡（WpsForge Ribbon）
+所有按钮均配备独立的 32×32 纯矢量 SVG 高清图标，与 WPS 原生设计语言无缝融合：
+
+- **数据清洗**
+  - **删除空行**：精准扫描选区或整表，一键剔除全部纯空行。
+  - **删除空列**：按列检测无数据区域，一键批量清除空列。
+  - **整行去重**：对比整行内容，保留首条记录，过滤重复行。
+  - **清除空格**：自动清理单元格首尾的半角空格、全角空格及不可见控制符。
+- **格式美化**
+  - **一键美化**：深蓝商务表头、双线边框、自动适配最优行高列宽。
+  - **斑马纹**：交替浅色底纹，提升宽表浏览可读性。
+  - **冻结首行**：自动锁定表头行，滚动时表头常驻。
+  - **批量序号**：快速纵向生成自增连续数字序号。
+- **AI 助手**
+  - **AI 侧边栏**：点击拉起现代化智能对话侧边栏。
+
+### 2. AI 侧边栏对话引擎（Taskpane）
+- **工具调用可视化（Tool Cards）**：每次 Function Calling 均展示调用名称、入参、执行动画、结果摘要与折叠详情，过程全透明。
+- **多模型支持**：内置 DeepSeek（推荐 · 极高性价比）、硅基流动 SiliconFlow、月之暗面 Kimi、智谱 GLM、OpenAI 及自定义 OpenAI 兼容接口。
+- **全矢量图形设计**：界面杜绝使用字符表情，交互按钮、状态徽章、快捷胶囊均由轻量级矢量 SVG 渲染。
+- **剪贴板防护**：内置原生右键菜单，彻底解决 WPS 内嵌 Webview 抢占系统复制/粘贴快捷键的痛点。
+- **多级代理网络容错**：自动探测并提供同源代理转发，解决直连模型的 CORS 跨域拦截问题。
+
+---
 
 ## 快速开始（开发调试）
 
-环境要求：Node.js ≥ 18、本机安装 WPS 个人版/365（Mac 或 Windows 均可）。
+### 环境要求
+- **Node.js** ≥ 18.0.0
+- **WPS Office** 个人版 / 365（Windows 或 macOS 均可正常运行）
+
+### 安装与运行
 
 ```bash
-npm install          # 安装依赖（含 wps-jsapi 类型提示）
-npm run dev          # 启动本地开发服务（端口 3889）
-# 或
-wpsjs debug          # 自动注册调试加载项并拉起 WPS，改代码热更新
+# 1. 克隆代码仓库
+git clone https://github.com/your-username/wps-forge.git
+cd wps-forge
+
+# 2. 安装依赖（含 wps-jsapi 类型定义）
+npm install
+
+# 3. 启动本地开发服务（端口 3889）
+npm run dev
+
+# 4. 自动注册加载项并拉起 WPS 调试（推荐）
+wpsjs debug
 ```
 
-首次 `wpsjs debug` 后重启一次 WPS（功能区 `ribbon.xml` 只在启动时读取）。
-在 WPS 表格里看到 **WpsForge** 选项卡即成功。
+> **提示**：首次运行 `wpsjs debug` 后请重启一次 WPS（功能区 `ribbon.xml` 仅在 WPS 启动初始化时加载）。在顶部菜单看到 **WpsForge** 选项卡即表示安装成功。
 
-### 启用 AI 侧边栏
+### 配置与使用 AI 侧边栏
 
-点工具栏「AI 侧边栏」→ 右上角「设置」填 API Key → 点「测试连接」验证 → 保存。
-支持任意 **OpenAI 兼容 + function-calling** 的服务，内置预设：DeepSeek（推荐，便宜）、Kimi、智谱 GLM、OpenAI。
-Key 只保存在本机 WPS 网页缓存里，直连你选的模型服务商，不经过任何第三方（包括本项目作者）。
+1. 点击顶部功能区「**AI 助手**」→「**AI 侧边栏**」。
+2. 点击侧边栏右上角「**设置**」图标，填入您自有服务商的 API Key（如 DeepSeek）。
+3. 点击「**测试连接**」，侧边栏将向模型发送 Function Calling 探测包进行握手验证。
+4. 验证通过后点击「**保存配置**」，即可开始在对话框输入自然语言指令。
 
-**网络兜底**：WPS 侧边栏是 webview，直连某些模型服务（尤其 api.openai.com）会被 CORS 拦截。
-此时插件会自动改走本地代理——另开一个终端运行：
+---
+
+## 分发与安装（团队部署）
 
 ```bash
-npm run proxy    # 只监听 127.0.0.1:3890，原样转发并补 CORS 头，不落盘任何数据
+# 构建正式发布包
+wpsjs publish
 ```
 
-输入框内的复制/粘贴：若系统快捷键被 WPS 宿主抢占，用**右键菜单**（剪切/复制/粘贴/全选）。
+执行后将生成 `wps-addon-build/` 与 `wps-addon-publish/`：
+1. **在线安装（企业/团队推荐）**：将构建文件上传至任何支持 HTTPS 的服务器或对象存储，同事只需在浏览器中打开 `publish.html` 点击“安装”即可，WPS 启动时会自动检查版本更新。
+2. **离线便携安装**：直接将生成的加载项目录复制到用户的本机目录：
+   - **Windows**: `%APPDATA%\kingsoft\wps\jsaddons\`
+   - **macOS**: `~/Library/Containers/com.kingsoft.wpsoffice.mac/Data/.kingsoft/wps/jsaddons/`
 
-## 安装给同事/朋友用
+---
 
-```bash
-wpsjs publish        # 生成 wps-addon-build/ 与 wps-addon-publish/
-```
-
-把 `wps-addon-build/` 部署到任意 HTTPS 静态目录（GitHub Pages / 对象存储 / 内网服务器），
-让对方打开 `wps-addon-publish/publish.html` 的线上地址，点击安装即可，之后 WPS 启动自动检查更新。
-
-没有服务器时的土办法（离线安装，适合当面帮朋友装）：
-把构建产物文件夹整个拷到对方的 WPS 加载项目录并写入 publish.xml：
-
-- Windows: `%APPDATA%\kingsoft\wps\jsaddons\`
-- macOS: `~/Library/Containers/com.kingsoft.wpsoffice.mac/Data/.kingsoft/wps/jsaddons/`
-
-## 工作原理
+## 系统架构与工作原理
 
 ```
-ribbon.xml (功能区定义)
+ribbon.xml (功能区 XML 布局)
     │ OnAction
     ▼
 js/ribbon.js ──► window.ForgeActions ─┐
-                                      ├── js/tools.js  ← WPS jsapi (window.Application)
-ui/taskpane.html (AI 侧边栏)           │      同一套表格操作实现
-    │ chat + function-calling loop ───►┘
+                                      ├── js/tools.js  ← WPS JSAPI (window.Application)
+ui/taskpane.html (侧边栏界面)          │      完全同源的底层表格操作实现
+    │ 工具调用循环 (Tool-use loop) ────►┘
 js/taskpane.js
 ```
 
-- 基于 WPS 官方 **JS 加载项**体系（`wpsjs` 工具包），跨 Windows/Mac，无需 VBA。
-- AI 引擎是一个纯前端的 tool-use 循环：模型返回 `tool_calls` → 本地执行 jsapi → 结果回传 → 直到模型给出最终回答。
-- 表格读写通过官方对象模型（`ActiveSheet.UsedRange` 等），**不是**模拟点击，速度快且不误触。
+- **基于官方技术栈**：严格基于金山官方 WPS 加载项（JS Add-in）规范，使用现代 JavaScript 开发，不依赖任何已淘汰的 VBA 运行时。
+- **纯前端自治执行**：AI 调度引擎运行在本地，模型返回 `tool_calls` → 本地调用 WPS JSAPI 执行 → 结果回传模型，形成闭环。
+- **高保真操作**：底层通过 WPS 原生对象模型（`Range`、`Worksheet`）直接批量读写，非模拟鼠标键盘点击，稳定高效且支持 `Ctrl+Z` 撤销。
 
-## 数据安全声明
+---
 
-- 表格数据只在需要时被 AI 读取（`read_range` 单次最多 200 行 × 30 列），随对话发送给你配置的那个模型服务商。
-- 对不放心把数据交给云端模型的用户：AI 功能可以不启用，工具箱部分完全离线可用。
-- 插件发起的删除类操作支持 `Ctrl+Z` 撤销，但**保存前请自行备份**，重要表格请先"另存为"。
+## 数据安全与隐私声明
 
-## 路线图
+- **零云端存储**：本项目为**无服务器（Serverless）纯客户端插件**。除与您自行配置的模型服务商进行加密 API 通信外，本项目没有任何中间收集服务器，**绝不存储、中转或上传任何个人数据或 API Key**。
+- **密钥本地加密留存**：API Key 仅留存在您本机的浏览器本地缓存（`localStorage`）中，不落盘至远程文件。
+- **数据按需读取**：AI 仅在用户下达需要识别表格内容的指令时，才调用 `read_range` 工具读取上下文（默认单次限制读取不超过 200 行 × 30 列）。
+- **离线能力保障**：如果您不希望任何表格数据接入云端模型，只需不配置 API Key，工具箱全部一键操作功能（清洗、美化、去重、序号等）均**100% 离线可用**。
 
-- [x] MVP：8 个一键工具 + 12 个 AI 工具 + 对话执行引擎
-- [ ] 聚光灯（选区十字高亮，条件格式实现避免破坏原有底色）
-- [ ] 多工作簿汇总 / 按列拆分工作表（汇总大师类）
-- [ ] 图片批量导入导出、区域截图
-- [ ] AI 结果预览确认模式（先生成方案 diff，用户点"执行"再落表）
-- [ ] 自定义函数库（@customfunction 批量注册常用公式）
-- [ ] 多语言 & 安装包一键分发
+---
 
-## 常见问题
+## 参与贡献
 
-**Q: 选项卡没出现？**
-A: 重启 WPS（ribbon 只在启动时加载）；检查 `wpsjs debug` 输出的加载项注册是否成功。
+欢迎对 WpsForge 进行功能扩充、问题修复或提交设计改进！
+1. Fork 本仓库并新建特性分支（`git checkout -b feature/amazing-feature`）。
+2. 遵循现有的设计规范：
+   - 必须使用纯矢量 SVG 图标，杜绝引入字符/Emoji 图标；
+   - 新增表格操作需同时在 `js/tools.js` 中封装，并同步注册至 AI `toolsSchema` 中保持同源；
+   - 保持跨平台（Windows / macOS）与标准 JSAPI 语法兼容。
+3. 提交修改（`git commit -m 'feat: add some amazing feature'`）。
+4. 推送分支并向 `main` 分支发起 Pull Request。
 
-**Q: 个人版 WPS 提示加载项被限制？**
-A: 个人版 12.1.0.16910 起 `jsplugins.xml` 模式受限，请使用 `publish` 模式或新版 `wpsjs`（本工程已按此设计）。
+---
 
-**Q: 支持微软 Excel 吗？**
-A: 不支持。jsapi 是 WPS 特有体系。若做 Excel 版需要迁移到 Office JS Add-in / VSTO，
-对象模型高度同构，`tools.js` 的核心逻辑可以直接搬运。
+## 开源许可证与法律免责声明
 
-## License
+### 1. 开源许可证
+本项目基于 [MIT License](LICENSE) 协议完全开源。您可以自由使用、修改、分发甚至用于商业学习，但需在衍生版本中保留原作者的版权声明与许可条款。
 
-[MIT](LICENSE)
+### 2. 非官方商标免责声明 (Trademark Disclaimer)
+- **WPS**、**WPS Office** 及相关徽标为**北京金山办公软件股份有限公司（Kingsoft Office）**的注册商标。
+- **WpsForge** 是由独立开源社区开发者发起的第三方效率扩展项目，**与金山办公软件（Kingsoft）无任何官方隶属、赞助、授权、合资或直接商业关联**。
+- 本项目仅遵循金山办公官方开放的“WPS 加载项技术规范”进行合规的功能拓展与技术探索。
+
+### 3. 数据与使用免责条款 (As-Is Disclaimer)
+- 本软件按“现状 (AS IS)”提供，作者不对软件的适用性、稳定性或大模型生成内容的绝对准确性做任何明示或暗示的保证。
+- 尽管本插件对表格操作提供了 `Ctrl+Z` 撤销支持，但大模型针对复杂数据清洗和单元格改写存在一定随机性。**用户在对重要生产表格执行任何批量清洗、删除或覆写操作前，请务必自行做好原文件备份**。
+- 在任何情况下，开发者均不对因使用本软件或模型工具执行所引起的任何直接、间接、偶然或连带的数据损失或业务偏差承担法律责任。
