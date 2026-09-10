@@ -26,20 +26,46 @@
         set_number_format: "设置数字格式",
     };
 
-    const TOOL_ICONS = {
-        get_sheet_info: "📊",
-        read_range: "🔍",
-        write_cells: "✍️",
-        set_formula: "📐",
-        clean_data: "🧹",
-        sort_range: "↕️",
-        find_replace: "🔎",
-        beautify_table: "🎨",
-        add_zebra: "🏁",
-        fill_serial: "🔢",
-        freeze_header: "❄️",
-        set_number_format: "🏷️",
-    };
+    // 矢量 SVG 图标库（完全代替字符和表情图标）
+    function getToolSvg(name) {
+        const s = "currentColor";
+        switch (name) {
+            case "get_sheet_info":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></svg>`;
+            case "read_range":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+            case "write_cells":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+            case "set_formula":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19L10 5M10 19l6-14M14 12h7"></path></svg>`;
+            case "clean_data":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line><path d="M3 6h18M3 12h18M3 18h18"></path></svg>`;
+            case "sort_range":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 10M6 10l-5-5M6 10V2M18 19l5-5M23 14l-5 5M18 14v8"></path></svg>`;
+            case "find_replace":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35M8 11h6M11 8v6"></path></svg>`;
+            case "beautify_table":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6Z"></path></svg>`;
+            case "add_zebra":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="14" x2="21" y2="14"></line></svg>`;
+            case "fill_serial":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4M4 10h2M4 14h2l-2 2h2M4 18h2v2H4z"></path></svg>`;
+            case "freeze_header":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="21" y2="8"></line><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="12" cy="15" r="2"></circle></svg>`;
+            case "set_number_format":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>`;
+            default:
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
+        }
+    }
+
+    const SVG_SPARKLE = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6Z"/></svg>`;
+    const SVG_CHECK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    const SVG_CROSS = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+    const SVG_SPINNER = `<svg class="spin-svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>`;
+
+    const EYE_OPEN = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const EYE_CLOSED = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
 
     const SET_KEY = "wpsforge.settings.v2";
     const OLD_SET_KEY = "wpsforge.settings.v1";
@@ -176,7 +202,7 @@
     // ---------- 网络请求与多级代理 ----------
     async function apiRequest(path, init) {
         const base = (settings.base || "").replace(/\/+$/, "");
-        if (!base) throw new Error("接口地址未设置，请点击右上角 ⚙ 配置");
+        if (!base) throw new Error("接口地址未设置，请点击右上角配置按钮进行设置");
         const target = base + path;
 
         const via = () => Object.assign({}, init, {
@@ -217,7 +243,7 @@
     }
 
     async function callLLM() {
-        if (!settings.key) throw new Error("请先点击右上角 ⚙ 设置并保存 API Key");
+        if (!settings.key) throw new Error("请先点击右上角配置设置并保存 API Key");
         const payload = {
             model: settings.model,
             messages: [{ role: "system", content: systemPrompt() }].concat(messages.slice(-HISTORY_KEEP)),
@@ -269,18 +295,39 @@
             const text = await resp.text();
             if (resp.ok) {
                 out.className = "success";
-                out.textContent = "✅ 连接成功！模型响应正常，且完美支持 Function Calling 工具调用。";
+                out.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        <span>连接成功！模型响应正常，且完美支持 Function Calling 工具调用。</span>
+                    </div>
+                `;
                 return;
             }
             out.className = "error";
+            const errIcon = `<svg style="flex:none;margin-top:2px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
             if (/tool/i.test(text) && /unsupported|not support|invalid/i.test(text)) {
-                out.textContent = `❌ HTTP ${resp.status}：该模型不支持 tools 工具调用参数，请更换支持函数调用的模型（如 deepseek-chat、moonshot-v1-8k、glm-4-flash）。`;
+                out.innerHTML = `
+                    <div style="display:flex;align-items:flex-start;gap:6px;">
+                        ${errIcon}
+                        <span>HTTP ${resp.status}：该模型不支持 tools 工具调用参数，请更换支持函数调用的模型（如 deepseek-chat、moonshot-v1-8k、glm-4-flash）。</span>
+                    </div>
+                `;
             } else {
-                out.textContent = `❌ HTTP ${resp.status}：${text.slice(0, 260)}`;
+                out.innerHTML = `
+                    <div style="display:flex;align-items:flex-start;gap:6px;">
+                        ${errIcon}
+                        <span>HTTP ${resp.status}：${esc(text.slice(0, 260))}</span>
+                    </div>
+                `;
             }
         } catch (e) {
             out.className = "error";
-            out.textContent = "❌ " + (e && e.message ? e.message : e);
+            out.innerHTML = `
+                <div style="display:flex;align-items:flex-start;gap:6px;">
+                    <svg style="flex:none;margin-top:2px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    <span>${esc(e && e.message ? e.message : String(e))}</span>
+                </div>
+            `;
         }
     }
 
@@ -338,7 +385,7 @@
 
         const header = document.createElement("div");
         header.className = "ai-avatar-bar";
-        header.innerHTML = '<span class="spark">✨</span><span>WpsForge AI</span>';
+        header.innerHTML = `${SVG_SPARKLE}<span>WpsForge AI</span>`;
         div.appendChild(header);
 
         const toolList = document.createElement("div");
@@ -377,17 +424,20 @@
                 const card = document.createElement("div");
                 card.className = "tool-card";
 
-                const icon = TOOL_ICONS[name] || "⚙️";
+                const iconSvg = getToolSvg(name);
                 const titleZh = TOOL_NAMES_ZH[name] || name;
 
                 card.innerHTML = `
                     <div class="tool-card-header">
                         <div class="tool-info">
-                            <span>${icon}</span>
+                            <span style="display:inline-flex;align-items:center;color:#6366f1;">${iconSvg}</span>
                             <span>${esc(titleZh)}</span>
                             <small style="color:#94a3b8;font-weight:400">(${esc(name)})</small>
                         </div>
-                        <span class="tool-badge running">⟳ 执行中</span>
+                        <span class="tool-badge running">
+                            ${SVG_SPINNER}
+                            <span>执行中</span>
+                        </span>
                     </div>
                     <div class="tool-desc">正在处理表格数据…</div>
                 `;
@@ -400,7 +450,7 @@
                         const desc = card.querySelector(".tool-desc");
                         if (badge) {
                             badge.className = "tool-badge " + (ok ? "success" : "error");
-                            badge.textContent = ok ? "✓ 完成" : "✗ 失败";
+                            badge.innerHTML = (ok ? SVG_CHECK : SVG_CROSS) + `<span>${ok ? "完成" : "失败"}</span>`;
                         }
                         if (desc) {
                             desc.innerHTML = ok
@@ -467,7 +517,6 @@
 
                 // 检查是否有模型附带的回复文本
                 if (msg.content && msg.content.trim()) {
-                    // 若有工具调用又有文本，先展示部分文本
                     if (msg.tool_calls && msg.tool_calls.length) {
                         const pre = document.createElement("div");
                         pre.style.marginBottom = "6px";
@@ -502,7 +551,7 @@
                             content: JSON.stringify(result).slice(0, 15000),
                         });
                     }
-                    continue; // 执行完工具，回到循环继续给 LLM 总结或继续下一步
+                    continue;
                 }
 
                 // 模型给出最终回复
@@ -516,11 +565,14 @@
             const errMsg = e && e.message ? e.message : String(e);
             aiBubble.content.innerHTML = `
                 <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;color:#991b1b;font-size:12px;">
-                    <div style="font-weight:700;margin-bottom:4px;">⚠️ 请求或执行异常</div>
+                    <div style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <span>请求或执行异常</span>
+                    </div>
                     <div style="margin-bottom:6px;">${esc(errMsg)}</div>
                     <div style="color:#64748b;font-size:11px;line-height:1.5;">
                         <b>排查建议</b>：<br>
-                        1. 点击右上角 ⚙ 检查 API Key、Base URL 与模型名称是否准确。<br>
+                        1. 点击右上角配置检查 API Key、Base URL 与模型名称是否准确。<br>
                         2. 确保选择的模型支持 Function Calling（工具调用），如 DeepSeek-Chat、Kimi 或 GLM-4-Flash。<br>
                         3. 若为本地网络受限，可开启独立代理：<code>npm run proxy</code>。
                     </div>
@@ -603,15 +655,37 @@
             if (!isEditable(e.target)) return;
             e.preventDefault();
             const field = e.target;
-            const items = [["复制", "copy"], ["粘贴", "paste"], ["全选", "selectall"]];
-            if (selText(field)) items.unshift(["剪切", "cut"]);
+            const items = [
+                {
+                    label: "复制",
+                    op: "copy",
+                    svg: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
+                },
+                {
+                    label: "粘贴",
+                    op: "paste",
+                    svg: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect></svg>`
+                },
+                {
+                    label: "全选",
+                    op: "selectall",
+                    svg: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M9 3v18M3 9h18"></path></svg>`
+                }
+            ];
+            if (selText(field)) {
+                items.unshift({
+                    label: "剪切",
+                    op: "cut",
+                    svg: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>`
+                });
+            }
             menu.innerHTML = "";
-            items.forEach(([label, op]) => {
+            items.forEach((item) => {
                 const el = document.createElement("div");
-                el.textContent = label;
+                el.innerHTML = `${item.svg}<span>${item.label}</span>`;
                 el.onmousedown = (ev) => {
                     ev.preventDefault();
-                    clipOp(op, field);
+                    clipOp(item.op, field);
                     menu.style.display = "none";
                 };
                 menu.appendChild(el);
@@ -632,18 +706,25 @@
         card.className = "welcome-card";
         card.innerHTML = `
             <div class="welcome-header">
-                <div class="brand-icon" style="width:24px;height:24px;font-size:12px;">⚒️</div>
+                <div class="brand-icon" style="width:24px;height:24px;border-radius:6px;background:var(--primary-gradient);display:flex;align-items:center;justify-content:center;color:#fff;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                </div>
                 <h4>欢迎使用 WpsForge AI</h4>
             </div>
             <div class="welcome-p">
                 我是直接连接 WPS 表格对象模型的智能助手。您可以直接用大白话描述想对表格做的操作，AI 将自动调用内置工具实时执行。
             </div>
             <div class="welcome-tips">
-                💡 <b>常用指令</b>：<br>
-                • <code>给当前表格做一键美化和斑马纹</code><br>
-                • <code>删除所有空行与首尾空格</code><br>
-                • <code>读取第 C 列并写入求和公式到末尾</code><br>
-                • <code>按金额列降序排列整个表格</code>
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;font-weight:600;color:#334155;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path></svg>
+                    <span>常用表格指令：</span>
+                </div>
+                <div style="padding-left:18px;line-height:1.7;">
+                    <div>- <code>给当前表格做一键美化和斑马纹</code></div>
+                    <div>- <code>删除所有空行与首尾空格</code></div>
+                    <div>- <code>读取第 C 列并写入求和公式到末尾</code></div>
+                    <div>- <code>按金额列降序排列整个表格</code></div>
+                </div>
             </div>
         `;
         chat.appendChild(card);
@@ -726,7 +807,7 @@
             const k = $("s-key");
             const hidden = k.type === "password";
             k.type = hidden ? "text" : "password";
-            this.textContent = hidden ? "🙈" : "👁";
+            this.innerHTML = hidden ? EYE_CLOSED : EYE_OPEN;
         };
 
         bindCtxMenu();
@@ -738,10 +819,11 @@
             if (location.hash === "#settings") $("settings").classList.add("open");
         });
 
-        // 快捷指令点击
+        // 快捷指令点击：提取纯文本内容
         document.querySelectorAll(".quick-chip").forEach(el => {
             el.onclick = function () {
-                const text = this.textContent.replace(/^[\uD800-\uDBFF\uDC00-\uDFFF\u2600-\u27FF\uFE0F\s]+/g, "").trim();
+                const span = this.querySelector("span");
+                const text = (span ? span.textContent : this.textContent).trim();
                 $("input").value = text;
                 send();
             };

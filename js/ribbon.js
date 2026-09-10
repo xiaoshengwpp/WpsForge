@@ -68,16 +68,27 @@ function notify(msg) {
 }
 
 function GetImage(control) {
-    const eleId = control.Id
+    const eleId = control.Id;
     switch (eleId) {
         case "btnAI":
-            return "images/ai.svg"
+            return "images/ai.svg";
+        case "btnDelEmptyRows":
+            return "images/del_rows.svg";
+        case "btnDelEmptyCols":
+            return "images/del_cols.svg";
+        case "btnDelDup":
+            return "images/del_dup.svg";
+        case "btnTrim":
+            return "images/trim.svg";
         case "btnBeautify":
+            return "images/beautify.svg";
         case "btnZebra":
+            return "images/zebra.svg";
         case "btnFreeze":
+            return "images/freeze.svg";
         case "btnSerial":
-            return "images/format.svg"
+            return "images/serial.svg";
         default:
-            return "images/clean.svg"
+            return "images/clean.svg";
     }
 }

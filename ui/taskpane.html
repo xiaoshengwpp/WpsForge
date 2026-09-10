@@ -441,6 +441,12 @@
         background: #dbeafe;
         color: #1d4ed8;
     }
+    .spin-svg {
+        animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
     .tool-badge.success {
         background: #dcfce7;
         color: #15803d;
@@ -710,7 +716,11 @@
     <!-- 顶部导航 -->
     <header>
         <div class="brand-wrap">
-            <div class="brand-icon">✨</div>
+            <div class="brand-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6Z"/>
+                </svg>
+            </div>
             <div class="brand-text">
                 <div class="title">
                     WpsForge AI
@@ -753,7 +763,12 @@
             <label>API Key</label>
             <div class="input-addon-wrap">
                 <input id="s-key" type="password" placeholder="sk-..." autocomplete="off">
-                <button id="btnEye" class="addon-btn" title="显示/隐藏密码">👁</button>
+                <button id="btnEye" class="addon-btn" title="显示/隐藏密码">
+                    <svg id="eye-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
             </div>
         </div>
         <div class="form-group">
@@ -761,7 +776,11 @@
             <input id="s-model" placeholder="deepseek-chat" autocomplete="off">
         </div>
         <div class="hint-box">
-            🛡️ <b>隐私安全</b>：API Key 仅安全保存在本机。如直连受限，将自动走本地同源代理转发。支持右键菜单复制粘贴。
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;font-weight:600;color:#334155">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>隐私安全说明</span>
+            </div>
+            API Key 仅安全保存在本机。直连受限时自动走本地同源代理转发，不落盘任何数据。支持右键菜单复制粘贴。
         </div>
         <div class="settings-actions">
             <button id="btnTest" class="btn-secondary">测试连接</button>
@@ -775,11 +794,26 @@
 
     <!-- 快捷指令栏 -->
     <div id="quick">
-        <span class="quick-chip">🎨 一键美化表格</span>
-        <span class="quick-chip">🧹 删除所有空行</span>
-        <span class="quick-chip">📐 读取数据并写求和公式</span>
-        <span class="quick-chip">📊 当前表格概况</span>
-        <span class="quick-chip">🏁 隔行斑马纹底色</span>
+        <span class="quick-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+            <span>一键美化表格</span>
+        </span>
+        <span class="quick-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
+            <span>删除所有空行</span>
+        </span>
+        <span class="quick-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="12" y1="10" x2="12.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line><line x1="8" y1="14" x2="8.01" y2="14"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="18" x2="8.01" y2="18"></line><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            <span>读取数据并写求和公式</span>
+        </span>
+        <span class="quick-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></svg>
+            <span>当前表格概况</span>
+        </span>
+        <span class="quick-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="14" x2="21" y2="14"></line></svg>
+            <span>隔行斑马纹底色</span>
+        </span>
     </div>
 
     <!-- 底部输入栏 -->
