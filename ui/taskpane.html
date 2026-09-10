@@ -34,6 +34,9 @@
     footer button { flex: none; width: 56px; border: none; border-radius: 7px; background: #6C5CE7; color: #fff; cursor: pointer; font-size: 13px; }
     footer button:disabled { background: #b9b3ec; cursor: default; }
     #status { flex: none; padding: 0 10px 6px; color: #999; font-size: 12px; min-height: 18px; }
+    #ctxmenu { position: fixed; display: none; z-index: 99; background: #fff; border: 1px solid #d6d9e0; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,.12); min-width: 96px; padding: 4px 0; }
+    #ctxmenu div { padding: 5px 14px; cursor: pointer; font-size: 12.5px; }
+    #ctxmenu div:hover { background: #f0eeff; color: #6C5CE7; }
 </style>
 </head>
 <body>
@@ -60,13 +63,20 @@
             <input id="s-base" placeholder="https://xxx/v1">
         </label>
         <label>API Key
-            <input id="s-key" type="password" placeholder="sk-...">
+            <span style="display:flex;gap:4px">
+                <input id="s-key" type="text" placeholder="sk-..." style="flex:1" autocomplete="off">
+                <button id="btnEye" title="显示/隐藏" style="flex:none;width:34px;border:1px solid #d6d9e0;border-radius:5px;background:#fff;cursor:pointer">🙈</button>
+            </span>
         </label>
         <label>模型名
             <input id="s-model" placeholder="deepseek-chat">
         </label>
-        <div class="hint">Key 仅保存在本机 WPS 网页缓存中，直接发给所选模型服务商。推荐使用支持 function-calling 的模型。</div>
-        <div style="margin-top:8px"><button id="btnSave" style="width:100%;padding:6px;border:none;border-radius:6px;background:#6C5CE7;color:#fff;cursor:pointer">保存设置</button></div>
+        <div class="hint">Key 仅保存在本机，直连你选择的模型服务商。直连被拦截时自动改走本地代理：<code>npm run proxy</code>（端口 3890）。输入框支持右键菜单复制/粘贴。</div>
+        <div style="margin-top:8px;display:flex;gap:6px">
+            <button id="btnTest" style="flex:1;padding:6px;border:1px solid #6C5CE7;border-radius:6px;background:#fff;color:#6C5CE7;cursor:pointer">测试连接</button>
+            <button id="btnSave" style="flex:1;padding:6px;border:none;border-radius:6px;background:#6C5CE7;color:#fff;cursor:pointer">保存设置</button>
+        </div>
+        <div id="test-result" class="hint" style="margin-top:6px"></div>
     </div>
     <div id="chat"></div>
     <div id="quick">
@@ -81,6 +91,7 @@
     </footer>
     <div id="status"></div>
 </div>
+<div id="ctxmenu"></div>
 <script type="text/javascript" src="../js/util.js"></script>
 <script type="text/javascript" src="../js/tools.js"></script>
 <script type="text/javascript" src="../js/taskpane.js"></script>

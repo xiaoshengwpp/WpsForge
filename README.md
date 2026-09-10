@@ -34,11 +34,18 @@ wpsjs debug          # 自动注册调试加载项并拉起 WPS，改代码热�
 
 ### 启用 AI 侧边栏
 
-点工具栏「AI 侧边栏」→ 右上角 ⚙ 填 API Key。支持任意 **OpenAI 兼容 + function-calling**
-的服务，内置预设：DeepSeek（推荐，便宜）、Kimi、智谱 GLM、OpenAI。
+点工具栏「AI 侧边栏」→ 右上角 ⚙ 填 API Key → 点「测试连接」验证 → 保存。
+支持任意 **OpenAI 兼容 + function-calling** 的服务，内置预设：DeepSeek（推荐，便宜）、Kimi、智谱 GLM、OpenAI。
 Key 只保存在本机 WPS 网页缓存里，直连你选的模型服务商，不经过任何第三方（包括本项目作者）。
 
-> 若提示 CORS/网络错误：确认该服务支持浏览器直连，或用"自定义"填一个你部署的中转 Base URL。
+**网络兜底**：WPS 侧边栏是 webview，直连某些模型服务（尤其 api.openai.com）会被 CORS 拦截。
+此时插件会自动改走本地代理——另开一个终端运行：
+
+```bash
+npm run proxy    # 只监听 127.0.0.1:3890，原样转发并补 CORS 头，不落盘任何数据
+```
+
+输入框内的复制/粘贴：若系统快捷键被 WPS 宿主抢占，用**右键菜单**（剪切/复制/粘贴/全选）。
 
 ## 安装给同事/朋友用
 

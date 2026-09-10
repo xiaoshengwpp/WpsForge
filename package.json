@@ -5,7 +5,8 @@
 	"scripts": {
 		"dev": "vite --port 3889",
 		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"proxy": "node scripts/proxy.mjs"
 	},
 	"description": "WpsForge - WPS表格「工具箱 + AI」混合效率加载项",
 	"license": "MIT",

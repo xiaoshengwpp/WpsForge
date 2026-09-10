@@ -49,26 +49,74 @@
     }
 
     // ---------- LLM 调用 ----------
-    async function callLLM() {
+    // 先直连；直连被 CORS/网络策略拦截(TypeError)时自动改走本地代理(npm run proxy)
+    async function apiRequest(path, init) {
         const base = (settings.base || "").replace(/\/+$/, "");
-        if (!base || !settings.key) throw new Error("请先在 ⚙ 设置中选择模型服务并填写 API Key");
+        if (!base) throw new Error("接口地址未设置，请先点 ⚙ 配置");
+        const target = base + path;
+        let directErr = null;
+        try {
+            return await fetch(target, init);
+        } catch (e) { directErr = e; }
+        try {
+            const pInit = Object.assign({}, init, {
+                headers: Object.assign({}, init.headers, { "X-WF-Target": target }),
+            });
+            return await fetch("http://127.0.0.1:3890/proxy", pInit);
+        } catch (e2) {
+            throw new Error(
+                "直连模型服务失败（" + (directErr && directErr.message || directErr) + "），本地代理也不可用（" +
+                (e2 && e2.message || e2) + "）。\n修复：在项目目录执行 npm run proxy 启动代理（窗口保持开着），再重试。");
+        }
+    }
+
+    async function callLLM() {
+        if (!settings.key) throw new Error("请先在 ⚙ 设置中填写 API Key");
         const payload = {
             model: settings.model,
             messages: [{ role: "system", content: systemPrompt() }].concat(messages.slice(-HISTORY_KEEP)),
             tools: toolsSchema(),
             temperature: 0.2,
         };
-        const resp = await fetch(base + "/chat/completions", {
+        const resp = await apiRequest("/chat/completions", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": "Bearer " + settings.key },
             body: JSON.stringify(payload),
         });
         if (!resp.ok) {
             let detail = "";
-            try { detail = (await resp.text()).slice(0, 300); } catch (e) { }
+            try { detail = (await resp.text()).slice(0, 400); } catch (e) { }
             throw new Error(`API ${resp.status} ${detail || resp.statusText}`);
         }
-        return (await resp.json()).choices[0].message;
+        const j = await resp.json();
+        if (!j.choices || !j.choices.length) throw new Error("API 返回异常: " + JSON.stringify(j).slice(0, 300));
+        return j.choices[0].message;
+    }
+
+    async function testConnection() {
+        const out = $("test-result");
+        out.textContent = "测试中…";
+        try {
+            const resp = await apiRequest("/chat/completions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + settings.key },
+                body: JSON.stringify({
+                    model: settings.model,
+                    messages: [{ role: "user", content: "ping" }],
+                    tools: toolsSchema(),
+                    max_tokens: 1,
+                }),
+            });
+            const text = await resp.text();
+            if (resp.ok) { out.textContent = "✅ 连接成功，模型可调用且支持 function-calling"; return; }
+            if (/tool/i.test(text) && /not support|unsupported|invalid|error/i.test(text)) {
+                out.textContent = "❌ HTTP " + resp.status + "：该模型/服务不支持 function-calling（tools 参数被拒绝），请换支持工具调用的模型，如 deepseek-chat、moonshot-v1-8k、glm-4-flash";
+            } else {
+                out.textContent = "❌ HTTP " + resp.status + "：" + text.slice(0, 260);
+            }
+        } catch (e) {
+            out.textContent = "❌ " + (e && e.message ? e.message : e);
+        }
     }
 
     function execTool(name, argsJson) {
@@ -82,6 +130,75 @@
         } catch (e) {
             return { ok: false, error: e && e.message ? e.message : String(e) };
         }
+    }
+
+    // ---------- 剪贴板：WPS 宿主抢占 ⌘C/⌘V，这里自行拦截 + 右键菜单 ----------
+    const isEditable = (el) => !!(el && el.matches && el.matches("input, textarea"));
+    function selText(field) {
+        const s = field.selectionStart, e = field.selectionEnd;
+        return (s != null && e != null && e > s) ? field.value.slice(s, e) : "";
+    }
+    function clipWrite(t) {
+        try { return navigator.clipboard.writeText(t) } catch (e) { }
+        try { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); } catch (e) { }
+        return Promise.resolve();
+    }
+    function clipRead() {
+        try { return navigator.clipboard.readText().catch(() => null) } catch (e) { return Promise.resolve(null) }
+    }
+    function insertText(field, text) {
+        field.focus();
+        let ok = false;
+        try { ok = document.execCommand("insertText", false, text); } catch (e) { }
+        if (!ok) {
+            const s = field.selectionStart ?? field.value.length;
+            const e = field.selectionEnd ?? field.value.length;
+            field.value = field.value.slice(0, s) + text + field.value.slice(e);
+            field.dispatchEvent(new Event("input", { bubbles: true }));
+            field.selectionStart = field.selectionEnd = s + text.length;
+        }
+    }
+    function clipOp(op, field) {
+        field = field || document.activeElement;
+        if (!isEditable(field)) return;
+        if (op === "copy") { clipWrite(selText(field) || field.value); }
+        else if (op === "cut") {
+            const t = selText(field);
+            if (t) { clipWrite(t); insertText(field, ""); }
+        }
+        else if (op === "paste") { clipRead().then((t) => { if (t != null && t !== "") insertText(field, t); }); }
+        else if (op === "selectall") { field.focus(); field.select(); }
+    }
+    document.addEventListener("keydown", (e) => {
+        if (!(e.metaKey || e.ctrlKey) || !isEditable(e.target)) return;
+        const k = (e.key || "").toLowerCase();
+        const map = { c: "copy", v: "paste", x: "cut", a: "selectall" };
+        if (!map[k]) return;
+        e.preventDefault();
+        clipOp(map[k], e.target);
+    });
+    function bindCtxMenu() {
+        const menu = $("ctxmenu");
+        document.addEventListener("contextmenu", (e) => {
+            if (!isEditable(e.target)) return;
+            e.preventDefault();
+            const field = e.target;
+            const items = [["复制", "copy"], ["粘贴", "paste"], ["全选", "selectall"]];
+            if (selText(field)) items.unshift(["剪切", "cut"]);
+            menu.innerHTML = "";
+            items.forEach(([label, op]) => {
+                const el = document.createElement("div");
+                el.textContent = label;
+                el.onmousedown = (ev) => { ev.preventDefault(); clipOp(op, field); menu.style.display = "none"; };
+                menu.appendChild(el);
+            });
+            menu.style.display = "block";
+            menu.style.left = Math.max(0, Math.min(e.clientX, window.innerWidth - 110)) + "px";
+            menu.style.top = Math.max(0, Math.min(e.clientY, window.innerHeight - menu.offsetHeight - 4)) + "px";
+        });
+        document.addEventListener("mousedown", (e) => {
+            if (menu.style.display === "block" && !menu.contains(e.target)) menu.style.display = "none";
+        });
     }
 
     // ---------- 渲染 ----------
@@ -169,7 +286,7 @@
             $("wrap-base").style.display = this.value === "custom" ? "block" : "none";
             if (this.value !== "custom") $("s-model").value = p.model;
         };
-        $("btnSave").onclick = function () {
+        function readForm() {
             const provider = $("s-provider").value;
             settings = {
                 provider,
@@ -177,10 +294,22 @@
                 model: $("s-model").value.trim() || PROVIDERS[provider].model,
                 key: $("s-key").value.trim(),
             };
+            return settings;
+        }
+        $("btnSave").onclick = function () {
+            readForm();
             saveSettings(settings);
             $("settings").classList.remove("open");
             setStatus("设置已保存");
         };
+        $("btnTest").onclick = function () { readForm(); testConnection(); };
+        $("btnEye").onclick = function () {
+            const k = $("s-key");
+            const hidden = k.type === "password";
+            k.type = hidden ? "text" : "password";
+            this.textContent = hidden ? "🙈" : "👁";
+        };
+        bindCtxMenu();
         // 回填设置
         $("s-provider").value = settings.provider || "deepseek";
         $("s-base").value = settings.base || "";
