@@ -1,4 +1,4 @@
-// js/taskpane.js — WpsForge AI 侧边栏：智能对话与工具执行引擎
+// js/taskpane.js — WpsForge AI 侧边栏：多功能模块、实时选区联动与智能执行引擎
 (function () {
     "use strict";
 
@@ -8,14 +8,23 @@
         kimi: { base: "https://api.moonshot.cn/v1", model: "moonshot-v1-8k", name: "Kimi" },
         glm: { base: "https://open.bigmodel.cn/api/paas/v4", model: "glm-4-flash", name: "智谱 GLM" },
         openai: { base: "https://api.openai.com/v1", model: "gpt-4o-mini", name: "OpenAI" },
+        ollama: { base: "http://127.0.0.1:11434/v1", model: "qwen2.5:7b", name: "Ollama 本地" },
         custom: { base: "", model: "", name: "自定义" },
     };
 
     const TOOL_NAMES_ZH = {
         get_sheet_info: "获取表格概况",
+        get_selection: "获取当前选区",
         read_range: "读取数据区域",
         write_cells: "写入单元格",
         set_formula: "写入公式",
+        highlight_cells: "单元格着色高亮",
+        merge_cells: "单元格合并/居中",
+        insert_delete_rows_cols: "插入/删除行列",
+        transpose_range: "行列转置",
+        quick_stats: "选区快速统计",
+        set_col_width_row_height: "调整行列宽",
+        create_chart: "创建图表",
         clean_data: "数据清洗",
         sort_range: "区域排序",
         find_replace: "查找与替换",
@@ -26,18 +35,34 @@
         set_number_format: "设置数字格式",
     };
 
-    // 矢量 SVG 图标库（完全代替字符和表情图标）
+    // 矢量 SVG 图标库
     function getToolSvg(name) {
         const s = "currentColor";
         switch (name) {
             case "get_sheet_info":
                 return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></svg>`;
+            case "get_selection":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>`;
             case "read_range":
                 return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
             case "write_cells":
                 return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
             case "set_formula":
                 return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19L10 5M10 19l6-14M14 12h7"></path></svg>`;
+            case "highlight_cells":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>`;
+            case "merge_cells":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>`;
+            case "insert_delete_rows_cols":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+            case "transpose_range":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>`;
+            case "quick_stats":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line></svg>`;
+            case "set_col_width_row_height":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 4 7 8 11"></polyline><polyline points="16 3 20 7 16 11"></polyline><line x1="4" y1="7" x2="20" y2="7"></line></svg>`;
+            case "create_chart":
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`;
             case "clean_data":
                 return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line><path d="M3 6h18M3 12h18M3 18h18"></path></svg>`;
             case "sort_range":
@@ -55,7 +80,7 @@
             case "set_number_format":
                 return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>`;
             default:
-                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
+                return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
         }
     }
 
@@ -65,12 +90,14 @@
     const SVG_SPINNER = `<svg class="spin-svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>`;
     const SVG_CHEVRON_DOWN = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
     const SVG_CHEVRON_UP = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><polyline points="18 15 12 9 6 15"></polyline></svg>`;
+    const SVG_COPY = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
 
     const EYE_OPEN = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
     const EYE_CLOSED = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
 
     const SET_KEY = "wpsforge.settings.v2";
     const OLD_SET_KEY = "wpsforge.settings.v1";
+    const CHAT_HISTORY_KEY = "wpsforge.chat.history.v1";
     const MAX_TOOL_STEPS = 12;
     const HISTORY_KEEP = 20;
 
@@ -119,7 +146,7 @@
             line = line.trim();
             if (!line) {
                 out.push("<br>");
-            } else if (!line.startsWith("<pre>") && !line.startsWith("<ul>") && !line.startsWith("<h") && !line.startsWith("<li>")) {
+            } else if (!line.startsWith("<pre>") && !line.startsWith("<ul>") && !line.startsWith("<h") && !line.startsWith("<li>") && !line.startsWith("<table")) {
                 out.push(`<p>${line}</p>`);
             } else {
                 out.push(line);
@@ -135,6 +162,7 @@
             base: PROVIDERS.deepseek.base,
             model: PROVIDERS.deepseek.model,
             key: "",
+            temperature: 0.2,
         };
         try {
             const raw = localStorage.getItem(SET_KEY) || localStorage.getItem(OLD_SET_KEY);
@@ -157,9 +185,40 @@
         }
     }
 
-    // ---------- 对话状态 ----------
+    // ---------- 对话状态与控制器 ----------
     let messages = [];
     let busy = false;
+    let abortController = null;
+    let lastUserQuery = "";
+    let currentSelectionContext = null;
+
+    function saveChatHistory() {
+        try {
+            localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages.slice(-30)));
+        } catch (e) { }
+    }
+
+    function loadChatHistory() {
+        try {
+            const raw = localStorage.getItem(CHAT_HISTORY_KEY);
+            if (raw) {
+                const list = JSON.parse(raw);
+                if (Array.isArray(list) && list.length) {
+                    messages = list;
+                    for (const m of messages) {
+                        if (m.role === "user") {
+                            addUserMessage(m.content);
+                        } else if (m.role === "assistant" && m.content) {
+                            const b = createAiMessage();
+                            b.setFinalText(m.content);
+                        }
+                    }
+                    return true;
+                }
+            }
+        } catch (e) { }
+        return false;
+    }
 
     function getWorkbookInfo() {
         try {
@@ -177,12 +236,31 @@
         return "（未检测到活动工作簿）";
     }
 
+    function getActiveSelectionContext() {
+        try {
+            if (window.ForgeActions && window.ForgeActions.getSelectionInfo) {
+                const r = window.ForgeActions.getSelectionInfo();
+                if (r && r.data) {
+                    return r.data;
+                }
+            }
+        } catch (e) { }
+        return null;
+    }
+
     function systemPrompt() {
         const info = getWorkbookInfo();
+        const sel = getActiveSelectionContext();
+        let selStr = "当前无特定选区";
+        if (sel && sel.address) {
+            selStr = `${sel.sheet}!${sel.address} (${sel.rows}行 × ${sel.columns}列)`;
+        }
+
         return "你是嵌入在 WPS 表格里的专业智能表格助手 WpsForge，可以通过系统工具直接操作用户当前打开的工作簿。\n" +
             "当前工作簿概况: " + info + "\n" +
+            "当前用户活动选区: " + selStr + "\n" +
             "核心规则:\n" +
-            "1. 需要理解数据结构或具体内容时，必须先调用 read_range 读取真实单元格，绝不凭空臆测。\n" +
+            "1. 需要理解数据结构或具体内容时，必须先调用 read_range 或 get_selection 读取真实单元格，绝不凭空臆测。\n" +
             "2. 生成公式使用 set_formula（公式必须以=开头，写入前核对行列位置）；成批写入使用 write_cells。\n" +
             "3. clean_data 中的删行、删列、整行去重为破坏性操作，若数据较多请提示用户支持 Ctrl+Z 撤销。\n" +
             "4. 一次回复中可连续调用多个工具协同完成复合任务；每一步给出简洁明了的说明。\n" +
@@ -204,7 +282,7 @@
     // ---------- 网络请求与多级代理 ----------
     async function apiRequest(path, init) {
         const base = (settings.base || "").replace(/\/+$/, "");
-        if (!base) throw new Error("接口地址未设置，请点击右上角配置按钮进行设置");
+        if (!base) throw new Error("接口地址未设置，请在【模型设置】标签页中设置并保存配置");
         const target = base + path;
 
         const via = () => Object.assign({}, init, {
@@ -228,7 +306,6 @@
         for (const [label, fn] of attempts) {
             try {
                 const r = await fn();
-                // 若端点 404 且不是 JSON 响应，说明此代理端点不存在，继续尝试下一个通道
                 if (r.status === 404) {
                     const text = await r.clone().text().catch(() => "");
                     if (!/^\s*[{[]/.test(text)) {
@@ -236,30 +313,34 @@
                         continue;
                     }
                 }
-                return r; // 有真实响应交给调用者
+                return r;
             } catch (e) {
+                if (e.name === "AbortError") throw e;
                 errors.push(label + "异常(" + (e && e.message ? e.message : e) + ")");
             }
         }
-        throw new Error("连接模型服务失败（" + errors.join("；") + "）。\n提示：若由于 CORS 跨域拦截，请在终端保持运行 npm run dev 或 npm run proxy。");
+        throw new Error("连接模型服务失败（" + errors.join("；") + "）。\n提示：若由于 CORS 跨域拦截，请保持终端开发服务运行。");
     }
 
-    async function callLLM() {
-        if (!settings.key) throw new Error("请先点击右上角配置设置并保存 API Key");
+    async function callLLM(signal) {
+        if (!settings.key && settings.provider !== "ollama") {
+            throw new Error("请先点击【模型设置】标签页填写并保存您的 API Key");
+        }
         const payload = {
             model: settings.model,
             messages: [{ role: "system", content: systemPrompt() }].concat(messages.slice(-HISTORY_KEEP)),
             tools: toolsSchema(),
-            temperature: 0.2,
+            temperature: Number(settings.temperature ?? 0.2),
         };
+
+        const headers = { "Content-Type": "application/json" };
+        if (settings.key) headers["Authorization"] = "Bearer " + settings.key;
 
         const resp = await apiRequest("/chat/completions", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + settings.key,
-            },
+            headers,
             body: JSON.stringify(payload),
+            signal,
         });
 
         if (!resp.ok) {
@@ -279,14 +360,14 @@
     async function testConnection() {
         const out = $("test-result");
         out.className = "loading";
-        out.textContent = "正在发起连接与工具调用验证…";
+        out.textContent = "正在发起连接与工具调用能力验证…";
         try {
+            const headers = { "Content-Type": "application/json" };
+            if (settings.key) headers["Authorization"] = "Bearer " + settings.key;
+
             const resp = await apiRequest("/chat/completions", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + settings.key,
-                },
+                headers,
                 body: JSON.stringify({
                     model: settings.model,
                     messages: [{ role: "user", content: "ping" }],
@@ -300,7 +381,7 @@
                 out.innerHTML = `
                     <div style="display:flex;align-items:center;gap:6px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                        <span>连接成功！模型响应正常，且完美支持 Function Calling 工具调用。</span>
+                        <span>连接成功！模型响应正常，且已通过 Function Calling 自动化工具链验证。</span>
                     </div>
                 `;
                 return;
@@ -361,10 +442,32 @@
         }
     }
 
-    // ---------- UI 气泡与卡片构建 ----------
+    // ---------- 实时选区感知 ----------
+    function refreshSelectionInfo() {
+        try {
+            if (window.ForgeActions && window.ForgeActions.getSelectionInfo) {
+                const r = window.ForgeActions.getSelectionInfo();
+                if (r && r.data) {
+                    const d = r.data;
+                    currentSelectionContext = d;
+                    const el = $("sel-pill");
+                    if (el) {
+                        el.textContent = `${d.sheet}!${d.address} (${d.rows}×${d.columns})`;
+                        el.title = `工作表: ${d.sheet}\n选区地址: ${d.address}\n维度: ${d.rows} 行 × ${d.columns} 列`;
+                    }
+                    return d;
+                }
+            }
+        } catch (e) { }
+        const el = $("sel-pill");
+        if (el) el.textContent = "未检测到选区";
+        return null;
+    }
+
+    // ---------- UI 气泡与消息卡片构建 ----------
     function scrollToBottom() {
         const chat = $("chat");
-        chat.scrollTop = chat.scrollHeight;
+        if (chat) chat.scrollTop = chat.scrollHeight;
     }
 
     function addUserMessage(text) {
@@ -387,7 +490,18 @@
 
         const header = document.createElement("div");
         header.className = "ai-avatar-bar";
-        header.innerHTML = `${SVG_SPARKLE}<span>WpsForge AI</span>`;
+        header.innerHTML = `
+            <div class="ai-avatar-name">
+                ${SVG_SPARKLE}
+                <span>WpsForge AI</span>
+            </div>
+            <div class="ai-msg-actions">
+                <button class="msg-action-btn btn-copy-msg" title="复制完整回答">
+                    ${SVG_COPY}
+                    <span>复制</span>
+                </button>
+            </div>
+        `;
         div.appendChild(header);
 
         const toolList = document.createElement("div");
@@ -406,6 +520,18 @@
         row.appendChild(div);
         $("chat").appendChild(row);
         scrollToBottom();
+
+        // 绑定复制按钮
+        header.querySelector(".btn-copy-msg").onclick = function () {
+            const raw = content.innerText || content.textContent;
+            clipWrite(raw).then(() => {
+                const sp = this.querySelector("span");
+                if (sp) {
+                    sp.textContent = "已复制";
+                    setTimeout(() => { sp.textContent = "复制"; }, 1500);
+                }
+            });
+        };
 
         return {
             row,
@@ -487,6 +613,42 @@
             setFinalText(text) {
                 this.hideTyping();
                 content.innerHTML = renderMarkdown(text);
+
+                // 公式快速填入卡片检测
+                const formulas = [];
+                const formulaRegex = /(=[A-Z0-9_]+\([^\n]+\))/g;
+                let m;
+                while ((m = formulaRegex.exec(text)) !== null) {
+                    if (!formulas.includes(m[1])) formulas.push(m[1]);
+                }
+                if (formulas.length > 0) {
+                    formulas.slice(0, 3).forEach(f => {
+                        const dock = document.createElement("div");
+                        dock.className = "formula-dock-bar";
+                        dock.innerHTML = `
+                            <span>公式: <code>${esc(f)}</code></span>
+                            <button>填入选区</button>
+                        `;
+                        dock.querySelector("button").onclick = () => {
+                            try {
+                                if (window.ForgeActions) {
+                                    const a = window.Application || (window.wps && (window.wps.EtApplication ? window.wps.EtApplication() : window.wps.Application));
+                                    const sel = a ? a.Selection : null;
+                                    if (sel && sel.Address) {
+                                        sel.Formula = f;
+                                        setStatus(`已填入公式 ${f} 到 ${sel.Address(false, false)}`);
+                                    } else {
+                                        setStatus("请先在表格中选定目标单元格");
+                                    }
+                                }
+                            } catch (err) {
+                                setStatus("填入公式受限: " + (err && err.message ? err.message : err));
+                            }
+                        };
+                        content.appendChild(dock);
+                    });
+                }
+
                 scrollToBottom();
             },
         };
@@ -498,26 +660,43 @@
     }
 
     // ---------- 发送与执行主循环 ----------
-    async function send() {
-        const text = $("input").value.trim();
+    async function send(customText) {
+        const inputEl = $("input");
+        const text = (customText || inputEl.value).trim();
         if (!text || busy) return;
-        $("input").value = "";
-        busy = true;
-        $("btnSend").disabled = true;
 
-        messages.push({ role: "user", content: text });
+        if (!customText) inputEl.value = "";
+        lastUserQuery = text;
+        busy = true;
+
+        $("btnSend").disabled = true;
+        const btnStop = $("btnStop");
+        if (btnStop) btnStop.classList.add("active");
+
+        abortController = new AbortController();
+
+        // 处理选区上下文关联
+        let fullQuery = text;
+        const ctxTag = $("context-tag");
+        if (ctxTag && ctxTag.classList.contains("open") && currentSelectionContext) {
+            fullQuery = `【用户当前选区: ${currentSelectionContext.sheet}!${currentSelectionContext.address}，共 ${currentSelectionContext.rows} 行 × ${currentSelectionContext.columns} 列】\n` + text;
+        }
+
+        messages.push({ role: "user", content: fullQuery });
         addUserMessage(text);
+        saveChatHistory();
 
         const aiBubble = createAiMessage();
 
         try {
             for (let step = 0; step < MAX_TOOL_STEPS; step++) {
+                if (abortController.signal.aborted) throw new Error("生成已由用户中止");
+
                 aiBubble.setTyping("思考中…");
                 setStatus("AI 正在思考…");
 
-                const msg = await callLLM();
+                const msg = await callLLM(abortController.signal);
 
-                // 检查是否有模型附带的回复文本
                 if (msg.content && msg.content.trim()) {
                     if (msg.tool_calls && msg.tool_calls.length) {
                         const pre = document.createElement("div");
@@ -536,6 +715,8 @@
                     });
 
                     for (const tc of msg.tool_calls) {
+                        if (abortController.signal.aborted) throw new Error("生成已由用户中止");
+
                         const fnName = tc.function.name;
                         const fnArgs = tc.function.arguments;
 
@@ -553,6 +734,8 @@
                             content: JSON.stringify(result).slice(0, 15000),
                         });
                     }
+                    saveChatHistory();
+                    refreshSelectionInfo();
                     continue;
                 }
 
@@ -560,35 +743,47 @@
                 const finalReply = msg.content || "(完成操作)";
                 messages.push({ role: "assistant", content: finalReply });
                 aiBubble.setFinalText(finalReply);
+                saveChatHistory();
+                refreshSelectionInfo();
                 break;
             }
         } catch (e) {
             aiBubble.hideTyping();
             const errMsg = e && e.message ? e.message : String(e);
-            aiBubble.content.innerHTML = `
-                <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;color:#991b1b;font-size:12px;">
-                    <div style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                        <span>请求或执行异常</span>
+            if (e.name === "AbortError" || errMsg.includes("中止")) {
+                aiBubble.content.innerHTML = `
+                    <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:8px;color:#64748b;font-size:11.5px;">
+                        <span>操作已停止。</span>
                     </div>
-                    <div style="margin-bottom:6px;">${esc(errMsg)}</div>
-                    <div style="color:#64748b;font-size:11px;line-height:1.5;">
-                        <b>排查建议</b>：<br>
-                        1. 点击右上角配置检查 API Key、Base URL 与模型名称是否准确。<br>
-                        2. 确保选择的模型支持 Function Calling（工具调用），如 DeepSeek-Chat、Kimi 或 GLM-4-Flash。<br>
-                        3. 若为本地网络受限，可开启独立代理：<code>npm run proxy</code>。
+                `;
+            } else {
+                aiBubble.content.innerHTML = `
+                    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;color:#991b1b;font-size:12px;">
+                        <div style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <span>请求或执行异常</span>
+                        </div>
+                        <div style="margin-bottom:6px;">${esc(errMsg)}</div>
+                        <div style="color:#64748b;font-size:11px;line-height:1.5;">
+                            <b>排查建议</b>：<br>
+                            1. 检查【模型设置】中的 API Key、Base URL 与模型名称是否准确。<br>
+                            2. 确保选择的模型支持 Function Calling（工具调用），如 DeepSeek-Chat、Kimi 或 GLM-4-Flash。<br>
+                            3. 如为本地网络环境，可启动开发服务代理转发。
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
         } finally {
             busy = false;
             $("btnSend").disabled = false;
+            if (btnStop) btnStop.classList.remove("active");
+            abortController = null;
             setStatus("");
             scrollToBottom();
         }
     }
 
-    // ---------- 剪贴板处理 (WPS 宿主防抢占) ----------
+    // ---------- 剪贴板处理 (WPS 宿主环境防抢占) ----------
     const isEditable = (el) => !!(el && el.matches && el.matches("input, textarea"));
 
     function selText(field) {
@@ -704,6 +899,7 @@
     // ---------- 初始化与界面事件绑定 ----------
     function showWelcomeCard() {
         const chat = $("chat");
+        if (!chat) return;
         const card = document.createElement("div");
         card.className = "welcome-card";
         card.innerHTML = `
@@ -711,25 +907,42 @@
                 <div class="brand-icon" style="width:24px;height:24px;border-radius:6px;background:var(--primary-gradient);display:flex;align-items:center;justify-content:center;color:#fff;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
                 </div>
-                <h4>欢迎使用 WpsForge AI</h4>
+                <h4>欢迎使用 WpsForge AI 智能伴侣</h4>
             </div>
             <div class="welcome-p">
-                我是直接连接 WPS 表格对象模型的智能助手。您可以直接用大白话描述想对表格做的操作，AI 将自动调用内置工具实时执行。
+                我直接连接 WPS 表格对象模型，支持智能选区感知与 Function Calling 自动化执行。用大白话描述您的需求，AI 将自动调用内置工具精确操作表格。
             </div>
-            <div class="welcome-tips">
-                <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;font-weight:600;color:#334155;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path></svg>
-                    <span>常用表格指令：</span>
-                </div>
-                <div style="padding-left:18px;line-height:1.7;">
-                    <div>- <code>给当前表格做一键美化和斑马纹</code></div>
-                    <div>- <code>删除所有空行与首尾空格</code></div>
-                    <div>- <code>读取第 C 列并写入求和公式到末尾</code></div>
-                    <div>- <code>按金额列降序排列整个表格</code></div>
-                </div>
+            <div style="font-size:11px;font-weight:600;color:#475569;margin-bottom:6px;">推荐新手试试：</div>
+            <div class="welcome-grid">
+                <button class="welcome-grid-btn" data-p="对当前选区执行一键商务美化并添加斑马纹">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6Z"/></svg>
+                    <span>商务美化报表</span>
+                </button>
+                <button class="welcome-grid-btn" data-p="清理当前工作表中的所有空白行与多余空格">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span>删除全部空行</span>
+                </button>
+                <button class="welcome-grid-btn" data-p="读取当前选区数据，并在下方写出求和与平均值公式">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"></rect></svg>
+                    <span>写入求和公式</span>
+                </button>
+                <button class="welcome-grid-btn" data-p="帮我分析当前表格数据结构并给出分析总结">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><circle cx="11" cy="11" r="8"></circle></svg>
+                    <span>数据诊断与洞察</span>
+                </button>
             </div>
         `;
         chat.appendChild(card);
+
+        card.querySelectorAll(".welcome-grid-btn").forEach(btn => {
+            btn.onclick = function () {
+                const p = this.getAttribute("data-p");
+                if (p) {
+                    $("input").value = p;
+                    send();
+                }
+            };
+        });
     }
 
     function initForm() {
@@ -737,12 +950,57 @@
         $("s-base").value = settings.base || PROVIDERS.deepseek.base;
         $("s-key").value = settings.key || "";
         $("s-model").value = settings.model || PROVIDERS.deepseek.model;
+        const temp = settings.temperature ?? 0.2;
+        $("s-temp").value = temp;
+        $("s-temp-val").textContent = temp;
         $("wrap-base").style.display = "block";
         updateModelBadge();
     }
 
+    // 切换 Tab 模块
+    function switchTab(tabName) {
+        document.querySelectorAll(".tab-btn").forEach(b => {
+            b.classList.toggle("active", b.getAttribute("data-tab") === tabName);
+        });
+        document.querySelectorAll(".tab-content-view").forEach(v => {
+            v.classList.toggle("active", v.id === "view-" + tabName);
+        });
+        if (tabName === "chat") {
+            scrollToBottom();
+        } else if (tabName === "settings") {
+            initForm();
+        }
+    }
+
+    // 工具箱模态面板展示
+    function showToolboxResult(title, content) {
+        const modal = $("tb-modal");
+        const titleEl = $("tb-modal-title-text");
+        const bodyEl = $("tb-modal-body");
+        if (modal && titleEl && bodyEl) {
+            titleEl.textContent = title;
+            bodyEl.textContent = content;
+            modal.classList.add("open");
+        }
+    }
+
     window.onload = function () {
-        $("btnSend").onclick = send;
+        // Tab 按钮绑定
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.onclick = function () {
+                switchTab(this.getAttribute("data-tab"));
+            };
+        });
+
+        // 发送与停止按钮
+        $("btnSend").onclick = () => send();
+        $("btnStop").onclick = function () {
+            if (abortController) {
+                abortController.abort();
+                setStatus("已请求停止");
+            }
+        };
+
         $("input").addEventListener("keydown", (e) => {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -750,16 +1008,58 @@
             }
         });
 
+        // 选区感知工具条
+        $("btnRefreshSel").onclick = () => {
+            const d = refreshSelectionInfo();
+            setStatus(d ? `已更新选区: ${d.sheet}!${d.address}` : "未检测到活动选区");
+            setTimeout(() => setStatus(""), 2000);
+        };
+
+        $("btnInsertSel").onclick = function () {
+            const d = currentSelectionContext || refreshSelectionInfo();
+            if (d && d.address) {
+                const tag = $("context-tag");
+                const tagText = $("context-tag-text");
+                tagText.textContent = `已关联选区: ${d.sheet}!${d.address} (${d.rows}×${d.columns})`;
+                tag.classList.add("open");
+                switchTab("chat");
+                $("input").focus();
+            } else {
+                setStatus("请先在表格中选择任意单元格或区域");
+            }
+        };
+
+        $("context-tag-close").onclick = function () {
+            $("context-tag").classList.remove("open");
+        };
+
+        $("btnQuickStatsSel").onclick = function () {
+            try {
+                if (window.ForgeActions && window.ForgeActions.quickStats) {
+                    const r = window.ForgeActions.quickStats();
+                    if (r && r.data) {
+                        const d = r.data;
+                        const summary = `【${d.address} 快速统计】\n总格数: ${d.total}\n非空数: ${d.nonBlank}\n数值数: ${d.numCount}\n求和 (Sum): ${d.sum ?? "-"}\n平均值 (Avg): ${d.avg ?? "-"}\n最小值 (Min): ${d.min ?? "-"}\n最大值 (Max): ${d.max ?? "-"}`;
+                        switchTab("toolbox");
+                        showToolboxResult("选区统计分析结果", summary);
+                    }
+                }
+            } catch (err) {
+                setStatus("统计失败: " + (err && err.message ? err.message : err));
+            }
+        };
+
+        // 清空对话
         $("btnClear").onclick = function () {
             messages = [];
+            localStorage.removeItem(CHAT_HISTORY_KEY);
             $("chat").innerHTML = "";
             showWelcomeCard();
+            setStatus("对话记录已清空");
+            setTimeout(() => setStatus(""), 1500);
         };
 
-        $("btnConfig").onclick = () => {
-            $("settings").classList.toggle("open");
-        };
-
+        // 收起侧边栏
         $("btnHide").onclick = function () {
             try {
                 const a = window.Application || (window.wps && (window.wps.EtApplication ? window.wps.EtApplication() : window.wps.Application));
@@ -770,6 +1070,95 @@
             } catch (e) { }
         };
 
+        // 场景库事件绑定
+        document.querySelectorAll(".sc-fill").forEach(btn => {
+            btn.onclick = function () {
+                const p = this.getAttribute("data-prompt");
+                if (p) {
+                    $("input").value = p;
+                    switchTab("chat");
+                    $("input").focus();
+                }
+            };
+        });
+
+        document.querySelectorAll(".sc-run").forEach(btn => {
+            btn.onclick = function () {
+                const p = this.getAttribute("data-prompt");
+                if (p) {
+                    switchTab("chat");
+                    send(p);
+                }
+            };
+        });
+
+        // 快捷指令胶囊栏
+        document.querySelectorAll(".quick-chip").forEach(el => {
+            el.onclick = function () {
+                const p = this.getAttribute("data-prompt") || this.querySelector("span")?.textContent?.trim();
+                if (p) send(p);
+            };
+        });
+
+        // 快捷工具箱离线动作绑定
+        $("tb-modal-close").onclick = () => {
+            $("tb-modal").classList.remove("open");
+        };
+
+        function runToolboxAction(name, runner) {
+            try {
+                const res = runner();
+                if (res && res.msg) setStatus(res.msg);
+                return res;
+            } catch (e) {
+                setStatus("操作失败: " + (e && e.message ? e.message : e));
+            }
+        }
+
+        $("tb-quick-stats").onclick = () => {
+            const r = runToolboxAction("选区统计", () => window.ForgeActions.quickStats());
+            if (r && r.data) {
+                const d = r.data;
+                const summary = `【${d.address} 数据统计】\n总单元格数: ${d.total}\n非空数: ${d.nonBlank}\n空白数: ${d.blank}\n数值个数: ${d.numCount}\n求和: ${d.sum ?? "-"}\n平均值: ${d.avg ?? "-"}\n最小值: ${d.min ?? "-"}\n最大值: ${d.max ?? "-"}`;
+                showToolboxResult("选区统计测算结果", summary);
+            }
+        };
+
+        $("tb-transpose").onclick = () => {
+            const r = runToolboxAction("行列转置", () => window.ForgeActions.transpose());
+            if (r && r.msg) showToolboxResult("行列转置完成", r.msg);
+        };
+
+        $("tb-export-md").onclick = () => {
+            const r = runToolboxAction("导出 Markdown", () => window.ForgeActions.exportMarkdown());
+            if (r && r.data && r.data.text) {
+                clipWrite(r.data.text).then(() => {
+                    showToolboxResult("已复制 Markdown 表格至剪贴板", r.data.text);
+                });
+            }
+        };
+
+        $("tb-export-json").onclick = () => {
+            const r = runToolboxAction("导出 JSON", () => window.ForgeActions.exportJson());
+            if (r && r.data && r.data.text) {
+                clipWrite(r.data.text).then(() => {
+                    showToolboxResult("已复制 JSON 数组至剪贴板", r.data.text);
+                });
+            }
+        };
+
+        $("tb-beautify").onclick = () => runToolboxAction("表格美化", () => window.ForgeActions.beautify());
+        $("tb-zebra").onclick = () => runToolboxAction("斑马纹", () => window.ForgeActions.addZebra());
+        $("tb-highlight-yellow").onclick = () => runToolboxAction("高亮黄色", () => window.ForgeActions.highlight(null, "yellow"));
+        $("tb-highlight-clear").onclick = () => runToolboxAction("清除高亮", () => window.ForgeActions.highlight(null, "clear"));
+        $("tb-freeze").onclick = () => runToolboxAction("冻结首行", () => window.ForgeActions.freeze());
+        $("tb-autofit").onclick = () => runToolboxAction("自适应列宽", () => window.ForgeActions.autoFit());
+        $("tb-del-empty-rows").onclick = () => runToolboxAction("删除空行", () => window.ForgeActions.deleteEmptyRows());
+        $("tb-del-dup").onclick = () => runToolboxAction("整行去重", () => window.ForgeActions.removeDuplicates());
+        $("tb-trim").onclick = () => runToolboxAction("去空格", () => window.ForgeActions.trimText());
+        $("tb-fill-serial").onclick = () => runToolboxAction("填充序号", () => window.ForgeActions.fillSerial());
+
+        // 模型设置相关
         $("s-provider").onchange = function () {
             const val = this.value;
             const p = PROVIDERS[val];
@@ -781,6 +1170,10 @@
             }
         };
 
+        $("s-temp").oninput = function () {
+            $("s-temp-val").textContent = this.value;
+        };
+
         function readForm() {
             const provider = $("s-provider").value;
             settings = {
@@ -788,6 +1181,7 @@
                 base: $("s-base").value.trim(),
                 model: $("s-model").value.trim() || (PROVIDERS[provider] ? PROVIDERS[provider].model : ""),
                 key: $("s-key").value.trim(),
+                temperature: Number($("s-temp").value || 0.2),
             };
             return settings;
         }
@@ -795,9 +1189,9 @@
         $("btnSave").onclick = function () {
             readForm();
             saveSettings(settings);
-            $("settings").classList.remove("open");
-            setStatus("设置已成功保存");
+            setStatus("配置已成功保存");
             setTimeout(() => setStatus(""), 2000);
+            switchTab("chat");
         };
 
         $("btnTest").onclick = function () {
@@ -814,23 +1208,16 @@
 
         bindCtxMenu();
         initForm();
-        if (location.hash === "#settings") {
-            $("settings").classList.add("open");
+        refreshSelectionInfo();
+
+        // 尝试载入历史聊天，若无则展示欢迎卡片
+        const hasHistory = loadChatHistory();
+        if (!hasHistory) {
+            showWelcomeCard();
         }
-        window.addEventListener("hashchange", () => {
-            if (location.hash === "#settings") $("settings").classList.add("open");
-        });
 
-        // 快捷指令点击：提取纯文本内容
-        document.querySelectorAll(".quick-chip").forEach(el => {
-            el.onclick = function () {
-                const span = this.querySelector("span");
-                const text = (span ? span.textContent : this.textContent).trim();
-                $("input").value = text;
-                send();
-            };
-        });
-
-        showWelcomeCard();
+        // 定时与窗口激活时刷新选区状态
+        window.addEventListener("focus", refreshSelectionInfo);
+        setInterval(refreshSelectionInfo, 4000);
     };
 })();

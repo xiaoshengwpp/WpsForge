@@ -57,12 +57,16 @@ Every action is accompanied by a dedicated, crisp 32x32 vector SVG icon tailored
 - **AI Assistant**
   - **AI Taskpane**: Opens the modern AI sidebar.
 
-#### 2. AI Autonomous Taskpane
-- **Transparent Tool Execution Cards**: Displays function call names, arguments, real-time spinner animations, status badges, and collapsible JSON payloads.
-- **Broad Model Support**: Built-in presets for DeepSeek, SiliconFlow, Moonshot Kimi, Zhipu GLM, OpenAI, and any custom OpenAI-compatible endpoint.
-- **Pure Vector SVG Interface**: Completely free of character or emoji icons; every UI element is rendered via vector SVGs.
-- **Clipboard Shield**: Custom context menu (Cut/Copy/Paste/Select All) to bypass WPS host webview keyboard shortcut hijacking.
-- **Multi-tiered Proxy Fallback**: Integrated same-origin reverse proxy to circumvent webview CORS restrictions.
+#### 2. AI Autonomous Copilot & Productivity Suite
+- **Multi-Module Tabbed Architecture**: Divided into four dedicated modules — **💬 AI Chat**, **⚡ Scenario Library**, **🛠️ Direct Toolbox**, and **⚙️ Model Settings**.
+- **Real-time Selection Awareness**: Automatically detects and displays active spreadsheet selections (e.g., `Sheet1!B2:F15`), enabling one-click context injection into prompts.
+- **Expanded 18+ Tool Capabilities**: AI directly executes cell highlighting, merge/center, row/column insertion & deletion, matrix transposition, instant statistics, auto-fitting, chart generation, and more.
+- **Formula One-Click Fill**: Detects spreadsheet formulas in AI answers and provides instant "Fill into Sheet" buttons.
+- **Stop & Regenerate**: Supports generation aborting via `AbortController`, one-click response copying, and persistent local chat history.
+- **Zero-Token Direct Toolbox**: Run high-frequency spreadsheet utilities (stats, transpose, export Markdown/JSON, fill blank cells) offline without consuming API tokens.
+- **Broad Model Support**: Built-in presets for DeepSeek, SiliconFlow, Moonshot Kimi, Zhipu GLM, OpenAI, local Ollama, and custom OpenAI-compatible endpoints.
+- **Pure Vector SVG Interface**: 100% vector SVG rendering across all icons, pills, badges, and controls.
+- **Clipboard Shield & Proxy Fallback**: Custom context menu and same-origin proxy fallback to bypass WPS webview CORS and shortcut hijacking.
 
 ---
 
@@ -206,12 +210,16 @@ Distributed under the [MIT License](LICENSE). You are free to use, modify, and d
 - **AI 助手**
   - **AI 侧边栏**：点击拉起现代化智能对话侧边栏。
 
-#### 2. AI 侧边栏对话引擎（Taskpane）
-- **工具调用可视化（Tool Cards）**：每次 Function Calling 均展示调用名称、入参、执行动画、结果摘要与折叠详情，过程全透明。
-- **多模型支持**：内置 DeepSeek（推荐 · 极高性价比）、硅基流动 SiliconFlow、月之暗面 Kimi、智谱 GLM、OpenAI 及自定义 OpenAI 兼容接口。
-- **全矢量图形设计**：界面杜绝使用字符表情，交互按钮、状态徽章、快捷胶囊均由轻量级矢量 SVG 渲染。
-- **剪贴板防护**：内置原生右键菜单，彻底解决 WPS 内嵌 Webview 抢占系统复制/粘贴快捷键的痛点。
-- **多级代理网络容错**：自动探测并提供同源代理转发，解决直连模型的 CORS 跨域拦截问题。
+#### 2. AI 全功能侧边栏与效率套件（Taskpane）
+- **多模块选项卡架构**：划分为四大功能模块 —— **💬 智能对话**、**⚡ 场景指令库**、**🛠️ 快捷工具箱**、**⚙️ 模型设置中心**。
+- **实时选区感知**：自动监听并展示当前表格选区坐标（如 `Sheet1!B2:F15`），支持一键将选区上下文一键注入提问提示词。
+- **扩展 18+ 底层操作工具库**：AI 支持直接调用单元格着色高亮、合并居中/取消、行列插入删除、行列转置、选区统计、自适应列宽、图表生成等高阶操作。
+- **公式一键填入**：智能提取模型回复中的 Excel/WPS 函数公式，提供一键写入当前活动单元格的直达按钮。
+- **停止与重试机制**：原生支持 `AbortController` 随时停止生成、回答一键复制与本地对话历史持久化。
+- **免 Token 快捷工具箱**：无需消耗 API 额度，离线一键完成选区测算统计、行列转置、导出 Markdown/JSON 及批量填充。
+- **广泛模型生态**：预设 DeepSeek、硅基流动、月之暗面 Kimi、智谱 GLM、OpenAI、本地 Ollama 及自定义兼容端点。
+- **纯原生矢量 SVG 驱动**：全界面 100% 采用矢量 SVG 渲染，无任何字符表情符号。
+- **剪贴板防护与代理容错**：内置专用右键菜单与同源代理自适应回退，杜绝 Webview 快捷键劫持与跨域拦截。
 
 ---
 

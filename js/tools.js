@@ -339,7 +339,271 @@
         return { msg: results.join("；") };
     }
 
-    // ---------- 功能区按钮入口（带选区智能判断） ----------
+    // ---------- 高阶能力扩展 ----------
+
+    const PRESET_COLORS = {
+        yellow: rgb(254, 240, 138), // #fef08a
+        green: rgb(187, 247, 208),  // #bbf7d0
+        red: rgb(254, 202, 202),    // #fecaca
+        blue: rgb(191, 219, 254),   // #bfdbfe
+        orange: rgb(254, 215, 170), // #fed7aa
+        purple: rgb(233, 213, 255), // #e9d5ff
+        gray: rgb(241, 245, 249),   // #f1f5f9
+        cyan: rgb(165, 243, 252),   // #a5f3fc
+    };
+
+    function parseColor(val) {
+        if (!val || val === "clear" || val === "none") return null;
+        if (PRESET_COLORS[val]) return PRESET_COLORS[val];
+        if (typeof val === "string" && val.startsWith("#")) {
+            let hex = val.replace("#", "");
+            if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+            if (hex.length === 6) {
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                return rgb(r, g, b);
+            }
+        }
+        if (typeof val === "number") return val;
+        return PRESET_COLORS.yellow;
+    }
+
+    function getSelectionInfo() {
+        const a = app();
+        const ws = activeSheet();
+        let sel = null;
+        try { sel = a.Selection; } catch (e) { }
+        if (!sel || !sel.Address) {
+            return {
+                msg: `${ws.Name} · 未检测到选区`,
+                data: { sheet: ws.Name, address: "A1", rows: 1, columns: 1, preview: [] }
+            };
+        }
+        const addr = sel.Address(false, false);
+        const rows = sel.Rows ? sel.Rows.Count : 1;
+        const cols = sel.Columns ? sel.Columns.Count : 1;
+        const data = to2d(sel.Value);
+        const preview = data.slice(0, 20).map(r => r.slice(0, 10));
+        return {
+            msg: `${ws.Name}!${addr} (${rows}行 × ${cols}列)`,
+            data: {
+                sheet: ws.Name,
+                address: addr,
+                rows,
+                columns: cols,
+                preview,
+            }
+        };
+    }
+
+    function highlightCells(ref, sheetName, colorType, customColor) {
+        const ws = sheetByName(sheetName);
+        const rng = (ref ? ws.Range(ref) : selectionOrUsed(ws));
+        const color = parseColor(customColor || colorType);
+        if (color === null || colorType === "clear") {
+            try { rng.Interior.ColorIndex = -4142; } catch (e) {
+                try { rng.Interior.Pattern = -4142; } catch (e2) {
+                    rng.Interior.Color = rgb(255, 255, 255);
+                }
+            }
+            return { msg: `已清除 ${rng.Address(false, false)} 的背景高亮` };
+        }
+        rng.Interior.Color = color;
+        return { msg: `已将 ${rng.Address(false, false)} 高亮标记为 ${colorType || "自定义颜色"}` };
+    }
+
+    function mergeCells(ref, sheetName, action) {
+        const ws = sheetByName(sheetName);
+        const rng = (ref ? ws.Range(ref) : selectionOrUsed(ws));
+        const act = (action || "merge_center").toLowerCase();
+        if (act === "unmerge") {
+            rng.UnMerge();
+            return { msg: `已取消 ${rng.Address(false, false)} 的合并单元格` };
+        } else if (act === "merge") {
+            rng.Merge();
+            return { msg: `已合并 ${rng.Address(false, false)}` };
+        } else {
+            rng.Merge();
+            try { rng.HorizontalAlignment = XL_CENTER; } catch (e) { }
+            return { msg: `已合并居中 ${rng.Address(false, false)}` };
+        }
+    }
+
+    function insertDeleteRowsCols(sheetName, type, action, index, count) {
+        const ws = sheetByName(sheetName);
+        const n = Math.max(1, count || 1);
+        const idx = Math.max(1, index || 1);
+        const isRow = (type === "row");
+        const isInsert = (action === "insert");
+
+        for (let i = 0; i < n; i++) {
+            if (isRow) {
+                if (isInsert) ws.Rows.Item(idx).Insert();
+                else ws.Rows.Item(idx).Delete();
+            } else {
+                if (isInsert) ws.Columns.Item(idx).Insert();
+                else ws.Columns.Item(idx).Delete();
+            }
+        }
+        const actStr = isInsert ? "插入" : "删除";
+        const targetStr = isRow ? `第 ${idx} 行起 ${n} 行` : `第 ${idx} 列起 ${n} 列`;
+        return { msg: `已成功${actStr} ${targetStr}` };
+    }
+
+    function setColWidthRowHeight(ref, sheetName, colWidth, rowHeight, autoFit) {
+        const ws = sheetByName(sheetName);
+        const rng = (ref ? ws.Range(ref) : selectionOrUsed(ws));
+        if (autoFit) {
+            try { rng.Columns.AutoFit(); } catch (e) { }
+            try { rng.Rows.AutoFit(); } catch (e) { }
+            return { msg: `已对 ${rng.Address(false, false)} 执行自动调整行列宽` };
+        }
+        if (colWidth != null && !isNaN(colWidth)) {
+            try { rng.ColumnWidth = Number(colWidth); } catch (e) { }
+        }
+        if (rowHeight != null && !isNaN(rowHeight)) {
+            try { rng.RowHeight = Number(rowHeight); } catch (e) { }
+        }
+        return { msg: `已调整 ${rng.Address(false, false)} 尺寸 (列宽: ${colWidth ?? "默认"}, 行高: ${rowHeight ?? "默认"})` };
+    }
+
+    function transposeRange(sourceRef, targetStart, sheetName) {
+        const ws = sheetByName(sheetName);
+        const src = (sourceRef ? ws.Range(sourceRef) : selectionOrUsed(ws));
+        const data = to2d(src.Value);
+        if (!data.length || !data[0].length) return { msg: "没有有效数据可供转置" };
+        const rows = data.length;
+        const cols = data[0].length;
+        const transposed = [];
+        for (let c = 0; c < cols; c++) {
+            const newRow = [];
+            for (let r = 0; r < rows; r++) {
+                newRow.push(data[r][c] !== undefined ? data[r][c] : null);
+            }
+            transposed.push(newRow);
+        }
+        const targetCell = targetStart ? ws.Range(targetStart.split(":")[0]) : ws.Cells.Item(src.Row, src.Column + cols + 1);
+        writeBlock(ws, targetCell.Row, targetCell.Column, transposed);
+        return {
+            msg: `已将 ${src.Address(false, false)} (${rows}行×${cols}列) 转置为 (${cols}行×${rows}列) 写入 ${targetCell.Address(false, false)}`,
+            data: { rows: cols, columns: rows, start: targetCell.Address(false, false) }
+        };
+    }
+
+    function quickStats(ref, sheetName) {
+        const ws = sheetByName(sheetName);
+        const rng = (ref ? ws.Range(ref) : selectionOrUsed(ws));
+        const data = to2d(rng.Value);
+        let total = 0, nonBlank = 0, numCount = 0;
+        let sum = 0, min = null, max = null;
+        for (let r = 0; r < data.length; r++) {
+            for (let c = 0; c < data[r].length; c++) {
+                total++;
+                const v = data[r][c];
+                if (!isBlank(v)) {
+                    nonBlank++;
+                    let n = null;
+                    if (typeof v === "number") n = v;
+                    else if (typeof v === "string" && v.trim() !== "" && !isNaN(Number(v.trim()))) n = Number(v.trim());
+                    if (n !== null) {
+                        numCount++;
+                        sum += n;
+                        if (min === null || n < min) min = n;
+                        if (max === null || n > max) max = n;
+                    }
+                }
+            }
+        }
+        const avg = numCount > 0 ? (sum / numCount) : 0;
+        const stats = {
+            address: rng.Address(false, false),
+            total,
+            nonBlank,
+            blank: total - nonBlank,
+            numCount,
+            sum: numCount > 0 ? Number(sum.toFixed(4)) : null,
+            avg: numCount > 0 ? Number(avg.toFixed(4)) : null,
+            min: min !== null ? Number(min.toFixed(4)) : null,
+            max: max !== null ? Number(max.toFixed(4)) : null,
+        };
+        const summaryText = numCount > 0
+            ? `${rng.Address(false, false)}：共 ${total} 单元格，数值 ${numCount} 个，求和=${stats.sum}，平均值=${stats.avg}，极值[${stats.min}, ${stats.max}]`
+            : `${rng.Address(false, false)}：共 ${total} 单元格，非空 ${nonBlank} 个，未包含数值数据`;
+        return { msg: summaryText, data: stats };
+    }
+
+    function exportData(ref, sheetName, format) {
+        const ws = sheetByName(sheetName);
+        const rng = (ref ? ws.Range(ref) : selectionOrUsed(ws));
+        const data = to2d(rng.Value);
+        if (!data.length) return { msg: "没有数据可导出", data: { text: "" } };
+        const fmt = (format || "markdown").toLowerCase();
+        let out = "";
+        if (fmt === "json") {
+            if (data.length > 1) {
+                const headers = data[0].map((h, i) => isBlank(h) ? `col_${i + 1}` : String(h));
+                const list = [];
+                for (let r = 1; r < data.length; r++) {
+                    const rowObj = {};
+                    for (let c = 0; c < headers.length; c++) {
+                        rowObj[headers[c]] = data[r][c] !== undefined ? data[r][c] : null;
+                    }
+                    list.push(rowObj);
+                }
+                out = JSON.stringify(list, null, 2);
+            } else {
+                out = JSON.stringify(data, null, 2);
+            }
+        } else if (fmt === "csv") {
+            out = data.map(r => r.map(c => {
+                if (c == null) return "";
+                const s = String(c).replace(/"/g, '""');
+                return /[",\n]/.test(s) ? `"${s}"` : s;
+            }).join(",")).join("\n");
+        } else {
+            // markdown
+            const headers = data[0].map(h => isBlank(h) ? "-" : String(h));
+            const divider = headers.map(() => "---");
+            const lines = [
+                `| ${headers.join(" | ")} |`,
+                `| ${divider.join(" | ")} |`
+            ];
+            for (let r = 1; r < data.length; r++) {
+                const row = data[r].map(c => isBlank(c) ? " " : String(c).replace(/\|/g, "\\|"));
+                while (row.length < headers.length) row.push(" ");
+                lines.push(`| ${row.join(" | ")} |`);
+            }
+            out = lines.join("\n");
+        }
+        return {
+            msg: `已将 ${rng.Address(false, false)} 转换为 ${fmt.toUpperCase()} (${data.length}行)`,
+            data: { text: out, format: fmt, rows: data.length, columns: data[0].length }
+        };
+    }
+
+    function createChart(ref, sheetName, chartType, title) {
+        const ws = sheetByName(sheetName);
+        const rng = (ref ? ws.Range(ref) : selectionOrUsed(ws));
+        try {
+            const chartObjs = ws.ChartObjects();
+            const left = (rng.Left || 50) + (rng.Width || 300) + 20;
+            const top = rng.Top || 30;
+            const co = chartObjs.Add(left, top, 460, 280);
+            co.Chart.SetSourceData(rng);
+            if (title) {
+                try {
+                    co.Chart.HasTitle = true;
+                    co.Chart.ChartTitle.Text = title;
+                } catch (e) { }
+            }
+            return { msg: `已在 ${rng.Address(false, false)} 旁创建${title ? "「" + title + "」" : ""}图表` };
+        } catch (err) {
+            return { msg: `创建图表受限: ${err && err.message ? err.message : err}` };
+        }
+    }
+
+    // ---------- 功能区与快捷面板按钮入口 ----------
 
     const actions = {
         deleteEmptyRows: () => deleteEmptyRows(null, activeSheet().Name),
@@ -350,6 +614,15 @@
         addZebra: () => addZebra(null, activeSheet().Name),
         freeze: () => freezeHeader(),
         fillSerial: () => fillSerial(null, 1, 1, activeSheet().Name),
+        getSelectionInfo: () => getSelectionInfo(),
+        quickStats: (ref) => quickStats(ref, activeSheet().Name),
+        highlight: (ref, color) => highlightCells(ref, activeSheet().Name, color),
+        merge: (ref, act) => mergeCells(ref, activeSheet().Name, act),
+        transpose: (src, dst) => transposeRange(src, dst, activeSheet().Name),
+        autoFit: (ref) => setColWidthRowHeight(ref, activeSheet().Name, null, null, true),
+        exportMarkdown: (ref) => exportData(ref, activeSheet().Name, "markdown"),
+        exportJson: (ref) => exportData(ref, activeSheet().Name, "json"),
+        createChart: (ref, type, title) => createChart(ref, activeSheet().Name, type, title),
     };
 
     // ---------- AI 工具注册表（JSON Schema 供 function-calling） ----------
@@ -361,6 +634,10 @@
         {
             name: "get_sheet_info", description: "获取当前工作簿概况：文件名、所有工作表、当前表的数据范围和选区。对话开始时先调用它了解上下文。",
             parameters: { type: "object", properties: {} }, run: getSheetInfo,
+        },
+        {
+            name: "get_selection", description: "获取用户当前在表格中框选的活动选区坐标（如 B2:D15）、行列数以及选区内前若干行的数据内容预览。",
+            parameters: { type: "object", properties: {} }, run: getSelectionInfo,
         },
         {
             name: "read_range", description: "读取指定区域的单元格值（返回二维数组）。要理解用户数据时必须先读，不要凭空猜测内容。",
@@ -389,6 +666,85 @@
                 },
             },
             run: (a) => setFormula(a.cell, a.formula, a.sheet),
+        },
+        {
+            name: "highlight_cells", description: "给指定单元格或区域设置背景高亮色。color 可选预设值：yellow(黄色)、green(浅绿)、red(浅红)、blue(浅蓝)、orange(橙色)、purple(淡紫)、gray(浅灰) 或 clear(清除高亮)。",
+            parameters: {
+                type: "object", required: ["color"],
+                properties: {
+                    color: { type: "string", enum: ["yellow", "green", "red", "blue", "orange", "purple", "gray", "clear"] },
+                    custom_color: { type: "string", description: "十六进制颜色如 #fef08a" },
+                    range: RANGE_PARAM, sheet: SHEET_PARAM,
+                },
+            },
+            run: (a) => highlightCells(a.range, a.sheet, a.color, a.custom_color),
+        },
+        {
+            name: "merge_cells", description: "合并单元格或取消合并。action 可选值：merge_center(合并居中，默认)、merge(普通合并)、unmerge(取消合并)。",
+            parameters: {
+                type: "object",
+                properties: {
+                    action: { type: "string", enum: ["merge_center", "merge", "unmerge"] },
+                    range: RANGE_PARAM, sheet: SHEET_PARAM,
+                },
+            },
+            run: (a) => mergeCells(a.range, a.sheet, a.action),
+        },
+        {
+            name: "insert_delete_rows_cols", description: "插入或删除特定行或列。",
+            parameters: {
+                type: "object", required: ["type", "action", "index"],
+                properties: {
+                    type: { type: "string", enum: ["row", "column"], description: "row为行，column为列" },
+                    action: { type: "string", enum: ["insert", "delete"], description: "insert为插入，delete为删除" },
+                    index: { type: "number", description: "从第几行或第几列开始(1开始)" },
+                    count: { type: "number", description: "数量，默认1" },
+                    sheet: SHEET_PARAM,
+                },
+            },
+            run: (a) => insertDeleteRowsCols(a.sheet, a.type, a.action, a.index, a.count),
+        },
+        {
+            name: "transpose_range", description: "行列转置：将指定区域的行列进行互换，并写入目标起始单元格。",
+            parameters: {
+                type: "object", required: ["source_range"],
+                properties: {
+                    source_range: { type: "string", description: "源区域地址，如 A1:D10" },
+                    target_start: { type: "string", description: "目标左上角单元格，如 F1。若省略则自动写入源数据右侧" },
+                    sheet: SHEET_PARAM,
+                },
+            },
+            run: (a) => transposeRange(a.source_range, a.target_start, a.sheet),
+        },
+        {
+            name: "quick_stats", description: "快速统计指定区域的数据概况（计算总格数、非空格数、数值格数、求和 Sum、平均值 Avg、最小值 Min、最大值 Max）。",
+            parameters: { type: "object", properties: { range: RANGE_PARAM, sheet: SHEET_PARAM } },
+            run: (a) => quickStats(a.range, a.sheet),
+        },
+        {
+            name: "set_col_width_row_height", description: "调整指定区域或整表的列宽、行高，或执行全自动最佳适应自适应 (auto_fit)。",
+            parameters: {
+                type: "object",
+                properties: {
+                    auto_fit: { type: "boolean", description: "是否自动最佳适应行列宽" },
+                    col_width: { type: "number", description: "列宽数值" },
+                    row_height: { type: "number", description: "行高数值" },
+                    range: RANGE_PARAM, sheet: SHEET_PARAM,
+                },
+            },
+            run: (a) => setColWidthRowHeight(a.range, a.sheet, a.col_width, a.row_height, a.auto_fit),
+        },
+        {
+            name: "create_chart", description: "根据指定数据区域在工作表中创建图表（如柱状图、折线图、饼图）。",
+            parameters: {
+                type: "object",
+                properties: {
+                    range: RANGE_PARAM, sheet: SHEET_PARAM,
+                    chart_type: { type: "string", description: "图表类型，如 column, line, pie" },
+                    title: { type: "string", description: "图表标题" },
+                },
+            },
+            run: (a) => createChart(a.range, a.sheet, a.chart_type, a.title),
         },
         {
             name: "clean_data", description: "数据清洗组合操作。ops 可选值：trim(去首尾空格)、remove_empty_rows(删空行)、remove_empty_cols(删空列)、remove_duplicates(按整行去重保留表头与首行)。删除类操作不可逆，执行前必须先向用户确认。",
