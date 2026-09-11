@@ -60,7 +60,7 @@ Every action is accompanied by a dedicated, crisp 32x32 vector SVG icon tailored
 #### 2. AI Autonomous Copilot & Productivity Suite
 - **Multi-Module Tabbed Architecture**: Divided into four dedicated modules — **💬 AI Chat**, **⚡ Scenario Library**, **🛠️ Direct Toolbox**, and **⚙️ Model Settings**.
 - **Real-time Selection Awareness**: Automatically detects and displays active spreadsheet selections (e.g., `Sheet1!B2:F15`), enabling one-click context injection into prompts.
-- **Expanded 18+ Tool Capabilities**: AI directly executes cell highlighting, merge/center, row/column insertion & deletion, matrix transposition, instant statistics, auto-fitting, chart generation, and more.
+- **Expanded 20 Built-in AI Tools (Function Calling)**: AI directly executes cell highlighting, merge/center, row/column insertion & deletion, matrix transposition, instant statistics, auto-fitting, chart generation, and more.
 - **Formula One-Click Fill**: Detects spreadsheet formulas in AI answers and provides instant "Fill into Sheet" buttons.
 - **Stop & Regenerate**: Supports generation aborting via `AbortController`, one-click response copying, and persistent local chat history.
 - **Zero-Token Direct Toolbox**: Run high-frequency spreadsheet utilities (stats, transpose, export Markdown/JSON, fill blank cells) offline without consuming API tokens.
@@ -120,21 +120,26 @@ This generates `wps-addon-build/` and `wps-addon-publish/`:
 
 ---
 
-### Architecture
+### Architecture & Engineering Design
 
 ```
 ribbon.xml (Ribbon XML Layout)
     │ OnAction
     ▼
-js/ribbon.js ──► window.ForgeActions ─┐
-                                      ├── js/tools.js  ← WPS JSAPI (window.Application)
-ui/taskpane.html (Sidebar UI)          │      Identical underlying spreadsheet API
-    │ Tool-use loop ──────────────────►┘
-js/taskpane.js
+js/ribbon.js ──► window.ForgeActions (17 actions) ──┐
+                                                    ├── js/tools/ (core, clean, format, advanced, schema)
+ui/taskpane.html (214 lines lightweight UI)          │   └── Shared WPS JSAPI (window.Application)
+    │ Tool-use loop (20 AI tools) ──────────────────►┘
+js/taskpane/ (data, tabs, orchestrator, ui...)
 ```
 
 - **Official Standards**: Built strictly on the official Kingsoft WPS JS Add-in framework (`wpsjs`), cross-platform without legacy VBA dependencies.
-- **Client-Side Autonomous Execution**: The tool-use engine runs locally in the sidebar. The LLM emits `tool_calls` → executed via WPS JSAPI → output fed back to LLM until final response.
+- **Modular & Componentized Architecture**:
+  - `ui/css/`: Decoupled CSS design system modules (`base`, `layout`, `chat`, `scenarios`, `toolbox`, `settings`).
+  - `js/tools/`: Layered spreadsheet operations engine (`core` foundation, `clean` data cleaning, `format` styling/beautification, `advanced` calculus/charts/matrices, `schema` AI Function Calling specs).
+  - `js/taskpane/`: Componentized sidebar architecture (`constants`, `utils`, `state`, `selection`, `llm`, `ui`, `orchestrator`, `data`, `tabs`).
+- **Declarative & Data-Driven UI (v-for style)**: Repetitive cards (Quick Prompts, Scenario Library, Direct Toolbox) are extracted into `js/taskpane/data.js` and rendered via declarative template functions with unified event delegation, slashing `ui/taskpane.html` from 1541 lines down to just 214 lines (13KB).
+- **Client-Side Autonomous Execution**: The tool-use loop runs locally in the sidebar. The LLM emits `tool_calls` → executed via WPS JSAPI → output fed back to LLM until final response.
 - **Native DOM Access**: Directly reads and writes through WPS native objects (`Range`, `Worksheet`), supporting `Ctrl+Z` undo.
 
 ---
@@ -154,7 +159,7 @@ Contributions, bug reports, and suggestions are warmly welcome!
 1. Fork the repository and create a branch (`git checkout -b feature/amazing-feature`).
 2. Follow project conventions:
    - Use pure vector SVG icons only (no character/emoji icons).
-   - Any spreadsheet action must be encapsulated in `js/tools.js` and registered in `toolsSchema` for AI use.
+   - Any spreadsheet action should be implemented in the appropriate module under `js/tools/` (`clean`, `format`, or `advanced`), registered in `js/tools/schema.js` for AI use, and exported via `js/tools.js`.
    - Maintain cross-platform (Windows & macOS) compatibility.
 3. Commit your changes (`git commit -m 'feat: add amazing feature'`).
 4. Push to your branch and submit a Pull Request.
@@ -213,7 +218,7 @@ Distributed under the [MIT License](LICENSE). You are free to use, modify, and d
 #### 2. AI 全功能侧边栏与效率套件（Taskpane）
 - **多模块选项卡架构**：划分为四大功能模块 —— **💬 智能对话**、**⚡ 场景指令库**、**🛠️ 快捷工具箱**、**⚙️ 模型设置中心**。
 - **实时选区感知**：自动监听并展示当前表格选区坐标（如 `Sheet1!B2:F15`），支持一键将选区上下文一键注入提问提示词。
-- **扩展 18+ 底层操作工具库**：AI 支持直接调用单元格着色高亮、合并居中/取消、行列插入删除、行列转置、选区统计、自适应列宽、图表生成等高阶操作。
+- **扩展 20 个内置 AI 深度操作工具（Function Calling）**：AI 支持直接调用单元格着色高亮、合并居中/取消、行列插入删除、行列转置、选区统计、自适应列宽、图表生成等高阶操作。
 - **公式一键填入**：智能提取模型回复中的 Excel/WPS 函数公式，提供一键写入当前活动单元格的直达按钮。
 - **停止与重试机制**：原生支持 `AbortController` 随时停止生成、回答一键复制与本地对话历史持久化。
 - **免 Token 快捷工具箱**：无需消耗 API 额度，离线一键完成选区测算统计、行列转置、导出 Markdown/JSON 及批量填充。
@@ -272,20 +277,25 @@ wpsjs publish
 
 ---
 
-### 系统架构与工作原理
+### 系统架构与工程化设计
 
 ```
 ribbon.xml (功能区 XML 布局)
     │ OnAction
     ▼
-js/ribbon.js ──► window.ForgeActions ─┐
-                                      ├── js/tools.js  ← WPS JSAPI (window.Application)
-ui/taskpane.html (侧边栏界面)          │      完全同源的底层表格操作实现
-    │ 工具调用循环 (Tool-use loop) ────►┘
-js/taskpane.js
+js/ribbon.js ──► window.ForgeActions (17 个动作) ───┐
+                                                    ├── js/tools/ (core, clean, format, advanced, schema)
+ui/taskpane.html (214 行轻量化骨架)                 │   └── 共享原生 WPS JSAPI (window.Application)
+    │ Agent 工具调用闭环 (20 个 AI 工具) ────────────►┘
+js/taskpane/ (data, tabs, orchestrator, ui...)
 ```
 
 - **基于官方技术栈**：严格基于金山官方 WPS 加载项（JS Add-in）规范，使用现代 JavaScript 开发，不依赖任何已淘汰的 VBA 运行时。
+- **清晰的工程化与组件化分层**：
+  - `ui/css/`：抽离解耦的 CSS 样式系统子模块（`base` 基础变量、`layout` 布局骨架、`chat` 消息对话、`scenarios` 场景库、`toolbox` 工具箱、`settings` 设置中心）。
+  - `js/tools/`：分层的底层表格操作引擎（`core` 基础设施、`clean` 数据清洗、`format` 格式美化、`advanced` 高阶算力与图表、`schema` AI 规格定义）。
+  - `js/taskpane/`：组件化的侧边栏业务与交互层（`constants` 常量图标、`utils` 基础工具、`state` 状态持久化、`selection` 选区感知、`llm` 网络通信、`ui` 视图卡片、`orchestrator` Agent 调度闭环、`data` 声明式配置项、`tabs` 数据驱动渲染与标签页控制）。
+- **声明式数据驱动与极简 DOM（类似 v-for）**：场景指令卡片、离线工具箱按钮与快捷胶囊完全解耦为 `data.js` 纯数据，结合轻量模板生成与统一事件委托，使 `ui/taskpane.html` 从初始 1541 行锐减至 **214 行（13KB）**，大幅提升可维护性与加载性能。
 - **纯前端自治执行**：AI 调度引擎运行在本地，模型返回 `tool_calls` → 本地调用 WPS JSAPI 执行 → 结果回传模型，形成闭环。
 - **高保真操作**：底层通过 WPS 原生对象模型（`Range`、`Worksheet`）直接批量读写，非模拟鼠标键盘点击，稳定高效且支持 `Ctrl+Z` 撤销。
 
@@ -306,7 +316,7 @@ js/taskpane.js
 1. Fork 本仓库并新建特性分支（`git checkout -b feature/amazing-feature`）。
 2. 遵循现有的设计规范：
    - 必须使用纯矢量 SVG 图标，杜绝引入字符/Emoji 图标；
-   - 新增表格操作需同时在 `js/tools.js` 中封装，并同步注册至 AI `toolsSchema` 中保持同源；
+   - 新增表格操作请按分类归入 `js/tools/` 对应子模块（`clean`/`format`/`advanced`），并在 `js/tools/schema.js` 中补充 AI 工具规格，通过 `js/tools.js` 统一汇出保持同源；
    - 保持跨平台（Windows / macOS）与标准 JSAPI 语法兼容。
 3. 提交修改（`git commit -m 'feat: add some amazing feature'`）。
 4. 推送分支并向 `main` 分支发起 Pull Request。

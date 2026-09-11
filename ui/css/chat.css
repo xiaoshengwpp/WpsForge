@@ -1,0 +1,350 @@
+/* ui/css/chat.css - 智能对话视图：气泡、Markdown、工具执行卡片与快捷 Prompt 胶囊 */
+
+#chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scroll-behavior: smooth;
+}
+
+/* 欢迎卡片 */
+.welcome-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 4px;
+}
+.welcome-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.welcome-header h4 {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+}
+.welcome-p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+.welcome-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+}
+.welcome-grid-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+}
+.welcome-grid-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+/* 消息气泡 */
+.msg-row {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    animation: fadeIn 0.2s ease-out;
+}
+.msg {
+    max-width: 92%;
+    padding: 10px 13px;
+    border-radius: var(--radius-lg);
+    line-height: 1.6;
+    word-break: break-word;
+    font-size: 12.5px;
+    position: relative;
+}
+.msg.user {
+    align-self: flex-end;
+    background: var(--primary-gradient);
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 3px 12px rgba(99, 102, 241, 0.28);
+    white-space: pre-wrap;
+}
+.msg.ai {
+    align-self: flex-start;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    box-shadow: var(--card-shadow);
+    width: 100%;
+    max-width: 98%;
+}
+.ai-avatar-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+}
+.ai-avatar-name {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.ai-msg-actions {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+.ai-msg-actions:hover { opacity: 1; }
+.msg-action-btn {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 2px 5px;
+    font-size: 10.5px;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.12s;
+}
+.msg-action-btn:hover {
+    background: #f1f5f9;
+    color: var(--primary);
+    border-color: var(--border);
+}
+
+/* 工具卡片 */
+.tool-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    margin: 6px 0;
+    padding: 8px 10px;
+    font-size: 12px;
+    transition: all 0.15s;
+}
+.tool-card:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+.tool-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+.tool-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #334155;
+}
+.tool-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.tool-badge.running { background: #dbeafe; color: #1d4ed8; }
+.tool-badge.success { background: #dcfce7; color: #15803d; }
+.tool-badge.error { background: #fee2e2; color: #b91c1c; }
+.spin-svg { animation: spin 0.9s linear infinite; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+.tool-desc {
+    color: var(--text-secondary);
+    font-size: 11.5px;
+    margin-top: 4px;
+    padding-left: 20px;
+    word-break: break-all;
+}
+.tool-detail-toggle {
+    font-size: 11px;
+    color: var(--primary);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 2px 0;
+    margin-top: 4px;
+    margin-left: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+.tool-detail-content {
+    display: none;
+    margin-top: 6px;
+    margin-left: 20px;
+    background: #0f172a;
+    color: #f8fafc;
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    font-family: Menlo, Consolas, monospace;
+    font-size: 10.5px;
+    max-height: 140px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+.tool-detail-content.open { display: block; }
+
+/* Markdown 渲染 */
+.msg-content { line-height: 1.65; word-break: break-word; }
+.msg-content p { margin-bottom: 6px; }
+.msg-content p:last-child { margin-bottom: 0; }
+.msg-content code {
+    background: #f1f5f9;
+    color: #e11d48;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: Menlo, Consolas, monospace;
+    font-size: 11.5px;
+    border: 1px solid #e2e8f0;
+}
+.msg.user code {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+.msg-content pre {
+    background: #1e293b;
+    color: #f8fafc;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    font-family: Menlo, Consolas, monospace;
+    font-size: 11px;
+    overflow-x: auto;
+    margin: 6px 0;
+    position: relative;
+}
+.msg-content pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border: none;
+}
+.msg-content ul, .msg-content ol { margin: 6px 0; padding-left: 18px; }
+.msg-content li { margin-bottom: 3px; }
+.msg-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 11.5px;
+}
+.msg-content th, .msg-content td {
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    text-align: left;
+}
+.msg-content th { background: #f1f5f9; font-weight: 600; }
+
+/* 公式快速填入条 */
+.formula-dock-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-sm);
+    padding: 3px 8px;
+    margin-top: 4px;
+    font-size: 11px;
+    color: #166534;
+}
+.formula-dock-bar button {
+    background: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10.5px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.formula-dock-bar button:hover { opacity: 0.9; }
+
+/* 跳动三点状态 */
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+.dot-flashing {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    animation: dotPulse 1s infinite alternate;
+}
+.dot-flashing:nth-child(2) { animation-delay: 0.2s; }
+.dot-flashing:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotPulse {
+    0% { opacity: 0.3; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1.2); }
+}
+
+/* 快捷指令胶囊栏 */
+#quick {
+    flex: none;
+    padding: 6px 12px 2px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    background: var(--bg);
+    z-index: 10;
+}
+.quick-chip {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    transition: all 0.15s ease;
+    user-select: none;
+}
+.quick-chip:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}

@@ -1,0 +1,8 @@
+/* ui/css/taskpane.css - WpsForge 侧边栏样式主入口 (按功能领域聚合子模块) */
+
+@import "./base.css";
+@import "./layout.css";
+@import "./chat.css";
+@import "./scenarios.css";
+@import "./toolbox.css";
+@import "./settings.css";

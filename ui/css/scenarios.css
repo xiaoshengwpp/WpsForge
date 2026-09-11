@@ -1,0 +1,82 @@
+/* ui/css/scenarios.css - 场景指令库视图：分组标题、卡片网格与操作按钮 */
+
+#view-scenarios {
+    padding: 12px;
+    gap: 12px;
+}
+.scenarios-group-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.scenarios-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.scenario-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    transition: all 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.scenario-card:hover {
+    border-color: var(--primary-border);
+    background: #fafbff;
+    box-shadow: 0 3px 10px rgba(99, 102, 241, 0.08);
+}
+.sc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+.sc-title {
+    font-weight: 600;
+    font-size: 12.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.sc-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+.sc-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+.sc-btn {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+}
+.sc-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+}
+.sc-btn.primary {
+    background: var(--primary-gradient);
+    color: #fff;
+    border: none;
+}
+.sc-btn.primary:hover {
+    opacity: 0.92;
+}
